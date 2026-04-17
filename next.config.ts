@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Exclude native modules from bundling
+  serverExternalPackages: ["better-sqlite3"],
+
   // Enable React strict mode for better development practices
   reactStrictMode: true,
 
