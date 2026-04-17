@@ -35,23 +35,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from sessionStorage on mount (resets when browser tab closes)
   useEffect(() => {
-    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    const saved = sessionStorage.getItem(CART_STORAGE_KEY);
     if (saved) {
       try {
         setCart(JSON.parse(saved));
       } catch {
-        localStorage.removeItem(CART_STORAGE_KEY);
+        sessionStorage.removeItem(CART_STORAGE_KEY);
       }
     }
     setMounted(true);
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to sessionStorage whenever it changes
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     }
   }, [cart, mounted]);
 
