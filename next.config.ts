@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Exclude native modules from bundling
-  serverExternalPackages: ["better-sqlite3"],
+  // Standalone output for Hostinger Node.js hosting
+  output: "standalone",
 
   // Enable React strict mode for better development practices
   reactStrictMode: true,
