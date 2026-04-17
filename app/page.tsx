@@ -200,7 +200,7 @@ export default function MoodWorldClassStore() {
 
       <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-          <a href="#home" className="order-last flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
+          <a href="#home" className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
             <div className="relative h-16 w-16 overflow-hidden">
   <Image
     src="/logo.png"
@@ -217,7 +217,7 @@ export default function MoodWorldClassStore() {
             </div>
           </a>
 
-          <nav className={`hidden items-center gap-8 font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] lg:flex ${isArabic ? "text-base" : "text-sm"}`}>
+          <nav className="hidden items-center gap-8 font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] lg:flex text-base">
             {navLinks.map(([href, label]) =>
               href === "products" || href === "export" || href === "blogs" ? (
                 <Link key={href} href={`/${href}`} className="transition hover:text-[#15803d]">
@@ -231,7 +231,7 @@ export default function MoodWorldClassStore() {
             )}
           </nav>
 
-          <div className="order-first flex items-center gap-3">
+          <div className="flex items-center gap-3">
             {/* Social Media Icons */}
             <div className="hidden items-center gap-1 lg:flex">
               {socialLinks.map((social) =>
@@ -296,7 +296,7 @@ export default function MoodWorldClassStore() {
 
         {mobileMenu && (
           <div className="border-t border-[#f0e2d0] bg-white/95 px-6 py-5 lg:hidden">
-            <div className={`flex flex-col gap-4 font-bold uppercase tracking-[0.14em] text-[#5f3b1f] ${isArabic ? "text-base" : "text-sm"}`}>
+            <div className="flex flex-col gap-4 font-bold uppercase tracking-[0.14em] text-[#5f3b1f] text-base">
               {navLinks.map(([href, label]) =>
                 href === "products" || href === "export" || href === "blogs" ? (
                   <Link key={href} href={`/${href}`} className="block transition hover:text-[#15803d]">

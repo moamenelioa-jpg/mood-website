@@ -19,7 +19,7 @@ export default function AccountPage() {
 
         {/* Header */}
         <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
-          <div className="mx-auto flex max-w-7xl items-center justify-end px-6 py-4 lg:px-10">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
             <Link href="/" className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
               <div className="relative h-16 w-16 overflow-hidden">
                 <Image src="/logo.png" alt="Mood Premium Peanut Butter Logo" fill sizes="64px" className="object-contain" priority />
@@ -62,7 +62,7 @@ export default function AccountPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-end px-6 py-4 lg:px-10">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
           <Link href="/" className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
             <div className="relative h-16 w-16 overflow-hidden">
               <Image src="/logo.png" alt="Mood Premium Peanut Butter Logo" fill sizes="64px" className="object-contain" priority />

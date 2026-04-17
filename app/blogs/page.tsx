@@ -212,7 +212,7 @@ export default function BlogsPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
           <Link
             href="/"
-            className="order-last flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80"
+            className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80"
           >
             <div className="relative h-16 w-16 overflow-hidden">
               <Image
@@ -235,7 +235,7 @@ export default function BlogsPage() {
           </Link>
 
           <nav
-            className={`hidden items-center gap-8 font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] lg:flex ${isArabic ? "text-base" : "text-sm"}`}
+            className="hidden items-center gap-8 font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] lg:flex text-base"
           >
             <Link href="/" className="transition hover:text-[#15803d]">
               {isArabic ? "الرئيسية" : "Home"}
@@ -260,7 +260,7 @@ export default function BlogsPage() {
             </Link>
           </nav>
 
-          <div className="order-first flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="hidden items-center gap-1 lg:flex">
               {socialLinks.map((social) =>
                 social.name === "Email" ? (
