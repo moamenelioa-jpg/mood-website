@@ -8,6 +8,8 @@
 import { NextResponse } from "next/server";
 import { verifyAdminToken } from "@/app/lib/admin-auth";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   try {
     const { idToken } = await req.json();

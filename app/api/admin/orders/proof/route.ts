@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getFirestoreOrderByNumber, updateFirestoreOrder } from "@/app/lib/firestore-orders-admin";
 import { requireAdmin } from "@/app/lib/admin-auth";
 
+export const runtime = "nodejs";
+
 // GET /api/admin/orders/proof?order=MOOD-XXXXXXXX-NNN
 export async function GET(req: Request) {
   const admin = await requireAdmin(req);

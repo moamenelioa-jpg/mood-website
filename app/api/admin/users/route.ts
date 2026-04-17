@@ -6,6 +6,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, grantAdmin, revokeAdmin, listAdmins } from "@/app/lib/admin-auth";
 
+export const runtime = "nodejs";
+
 export async function GET(req: Request) {
   const admin = await requireAdmin(req);
   if (admin instanceof Response) return admin;

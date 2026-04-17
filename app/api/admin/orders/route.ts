@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/app/lib/firebase-admin";
 import { requireAdmin } from "@/app/lib/admin-auth";
 
+export const runtime = "nodejs";
+
 // GET /api/admin/orders - List orders from Firestore with optional filters
 export async function GET(req: Request) {
   const admin = await requireAdmin(req);

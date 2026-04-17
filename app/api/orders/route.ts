@@ -14,6 +14,8 @@ import {
 } from "@/app/lib/types";
 import { createPaymobIntention, type PaymobBillingData } from "@/app/lib/paymob";
 
+export const runtime = "nodejs";
+
 interface CreateOrderRequest {
   customerName: string;
   phone: string;

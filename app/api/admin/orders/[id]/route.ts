@@ -8,6 +8,8 @@ import {
 import { OrderUpdateInput, OrderStatuses, PaymentStatuses } from "@/app/lib/types";
 import { requireAdmin } from "@/app/lib/admin-auth";
 
+export const runtime = "nodejs";
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

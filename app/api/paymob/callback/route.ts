@@ -5,6 +5,8 @@ import {
 } from "@/app/lib/firestore-orders-admin";
 import { verifyPaymobHmac } from "@/app/lib/paymob";
 
+export const runtime = "nodejs";
+
 /**
  * Paymob Transaction Callback (POST)
  *

@@ -15,6 +15,8 @@
 import { NextResponse } from "next/server";
 import { bootstrapSuperAdmin } from "@/app/lib/admin-auth";
 
+export const runtime = "nodejs";
+
 const SUPER_ADMIN_EMAIL = "moamenelioa@gmail.com";
 
 export async function POST(req: Request) {
