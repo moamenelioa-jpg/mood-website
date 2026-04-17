@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await parseCallbackBody(req);
 
-    if (!body || !isPlainObject(body)) {
+    if (!body) {
       console.error("[Paymob Callback] Empty or non-object body", {
         contentType: req.headers.get("content-type"),
       });
