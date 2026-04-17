@@ -643,8 +643,6 @@ export default function AdminOrdersPage() {
         setLoading(false);
       }
     );
-
-    unsubRef.current = unsub;
     return () => unsub();
   }, [authState]);  // re-runs only when auth state changes
 

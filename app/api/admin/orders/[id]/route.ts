@@ -134,14 +134,10 @@ export async function PATCH(req: Request, { params }: RouteParams) {
 
 // DELETE /api/admin/orders/[id] - Cancel order (soft delete)
 export async function DELETE(req: Request, { params }: RouteParams) {
-  try {
-    if (!validateAdminAccess(req)) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+  const admin = await requireAdmin(req);
+  if (admin instanceof Response) return admin;
 
+  try {
     const { id } = await params;
 
     const existingOrder = await getOrderById(id);

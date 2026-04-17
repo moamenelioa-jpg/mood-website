@@ -278,7 +278,8 @@ export async function GET(req: Request) {
     }
 
     // Strip proof image from public response (large base64), include flag only
-    const { bankTransferProof, ...orderData } = order as Record<string, unknown>;
+    const orderRecord = order as unknown as Record<string, unknown>;
+    const { bankTransferProof, ...orderData } = orderRecord;
     const hasProof = !!(orderData.receiptImageUrl || bankTransferProof);
     return NextResponse.json({
       success: true,
