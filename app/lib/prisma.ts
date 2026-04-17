@@ -6,7 +6,11 @@ const globalForPrisma = globalThis as {
 };
 
 function createPrismaClient() {
-  const url = new URL(process.env.DATABASE_URL!);
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is not set");
+  }
+  const url = new URL(connectionString);
   const adapter = new PrismaMariaDb({
     host: url.hostname,
     port: parseInt(url.port) || 3306,
@@ -18,10 +22,15 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+// Lazy initialization — only create the client when first accessed at runtime,
+// not at module load time (which happens during next build).
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    if (!globalForPrisma.prisma) {
+      globalForPrisma.prisma = createPrismaClient();
+    }
+    return Reflect.get(globalForPrisma.prisma, prop);
+  },
+});
 
 export default prisma;
