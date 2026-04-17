@@ -1,0 +1,108 @@
+// Production-ready Order Management Schema
+// Mood Store - E-commerce Order System
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Order Model - Production Ready with Shipping Support
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique // Human-readable order number (e.g., MOOD-20260416-001)
+  
+  // Customer Information
+  customerName    String
+  phone           String
+  email           String?
+  
+  // Address Information
+  address         String
+  city            String
+  governorate     String?  // Egyptian governorate/state
+  postalCode      String?
+  
+  // Order Notes
+  notes           String?
+  
+  // Financial
+  subtotal        Float
+  shippingFee     Float    @default(0)
+  total           Float
+  
+  // Payment
+  paymentMethod   String   // cod, stripe, bank_transfer
+  paymentStatus   String   @default("unpaid") // unpaid, pending, paid, failed
+  stripeSessionId String?
+  stripePaymentId String?
+  
+  // Order Status
+  orderStatus     String   @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled
+  
+  // Shipping Information (ready for shipping company integration)
+  shippingCompany String?
+  trackingNumber  String?
+  shippingStatus  String?  // pending, picked_up, in_transit, out_for_delivery, delivered
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  items           OrderItem[]
+  
+  // Indexes for fast lookups
+  @@index([phone])
+  @@index([orderStatus])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+// Order Item Model
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  
+  // Product Information
+  productId Int
+  name      String
+  size      String
+  price     Float
+  quantity  Int
+  image     String
+  
+  // Relation
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+}
+
+// Admin User Model (for future admin panel)
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin") // admin, superadmin
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Notification Log Model (for tracking sent notifications)
+model NotificationLog {
+  id          String   @id @default(cuid())
+  orderId     String
+  type        String   // sms, email, whatsapp
+  recipient   String
+  message     String
+  status      String   // sent, failed, pending
+  sentAt      DateTime @default(now())
+  
+  @@index([orderId])
+}

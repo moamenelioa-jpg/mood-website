@@ -1,0 +1,19 @@
+{
+  "name": "Mood Premium Peanut Butter",
+  "short_name": "Mood",
+  "description": "Premium peanut butter made from 100% natural peanuts. Order online in Egypt.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f7f4",
+  "theme_color": "#16a34a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "shopping"]
+}

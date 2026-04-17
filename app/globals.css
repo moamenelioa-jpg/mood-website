@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Improve text rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Touch target sizing for mobile accessibility */
+@media (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-cairo: var(--font-cairo);
+  --font-archivo-black: var(--font-archivo-black);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ==========================================
+   RTL SUPPORT STYLES
+   ========================================== */
+
+/* Arabic Font for RTL */
+[dir="rtl"] body,
+[dir="rtl"] {
+  font-family: var(--font-cairo), 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+/* LTR Font */
+[dir="ltr"] body,
+[dir="ltr"] {
+  font-family: var(--font-geist-sans), 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+/* RTL-specific adjustments */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Flip icons in RTL that should be mirrored */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Keep some icons unflipped in RTL */
+[dir="rtl"] .rtl-no-flip {
+  transform: scaleX(1) !important;
+}
+
+/* Form input alignment */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+
+[dir="ltr"] input,
+[dir="ltr"] textarea,
+[dir="ltr"] select {
+  text-align: left;
+}
+
+/* RTL spacing adjustments for specific cases */
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* RTL gap adjustments are automatic with flexbox */
+
+/* Smooth transition for direction changes */
+html {
+  transition: none;
+}
+
+body * {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Prevent layout shift on language change */
+html, body {
+  overflow-x: hidden;
+}
+
+/* RTL-aware flex direction */
+[dir="rtl"] .flex-row {
+  flex-direction: row;
+}
+
+/* Number display in RTL (keep numbers LTR) */
+[dir="rtl"] .ltr-nums {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Phone numbers should always be LTR */
+[dir="rtl"] input[type="tel"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* Email should be LTR */
+[dir="rtl"] input[type="email"] {
+  direction: ltr;
+  text-align: right;
+}

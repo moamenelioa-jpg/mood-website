@@ -1,0 +1,48 @@
+[
+  {
+    "id": "ORD-MO1CGUVY-Z8GLHO",
+    "customerName": "Moamen Abdullah Eliwa",
+    "phone": "01204819854",
+    "address": "32-Luxor street- araishiet masr- Al-Ismailiah",
+    "notes": "",
+    "items": [
+      {
+        "id": 2,
+        "name": "زبدة فول سوداني كريمي",
+        "size": "300g",
+        "price": 119,
+        "quantity": 2,
+        "image": "/products/creamy.jpg"
+      }
+    ],
+    "subtotal": 238,
+    "total": 238,
+    "paymentMethod": "cod",
+    "paymentStatus": "unpaid",
+    "orderStatus": "pending",
+    "createdAt": "2026-04-16T10:36:34.270Z"
+  },
+  {
+    "id": "ORD-MO1CIA3L-W64TQE",
+    "customerName": "Moamen Elioa",
+    "phone": "01055207211",
+    "address": "32Luxor street- araishiet masr- Al-Ismailiah",
+    "notes": "",
+    "items": [
+      {
+        "id": 3,
+        "name": "Chocolate Peanut Butter",
+        "size": "800g",
+        "price": 139,
+        "quantity": 2,
+        "image": "/products/chocolate.jpg"
+      }
+    ],
+    "subtotal": 278,
+    "total": 278,
+    "paymentMethod": "bank_transfer",
+    "paymentStatus": "pending",
+    "orderStatus": "pending",
+    "createdAt": "2026-04-16T10:37:40.641Z"
+  }
+]
