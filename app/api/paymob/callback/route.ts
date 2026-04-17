@@ -7,6 +7,54 @@ import { verifyPaymobHmac } from "@/app/lib/paymob";
 
 export const runtime = "nodejs";
 
+function parseJsonSafely(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+async function parsePaymobCallbackBody(req: NextRequest): Promise<Record<string, unknown> | null> {
+  const rawBody = await req.text();
+  const trimmedBody = rawBody.trim();
+
+  if (!trimmedBody) {
+    return null;
+  }
+
+  const contentType = req.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    const parsed = parseJsonSafely(trimmedBody);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+  }
+
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const params = new URLSearchParams(trimmedBody);
+    const objValue = params.get("obj");
+    if (objValue) {
+      const parsedObj = parseJsonSafely(objValue);
+      if (parsedObj && typeof parsedObj === "object") {
+        return { obj: parsedObj as Record<string, unknown> };
+      }
+    }
+
+    const payloadValue = params.get("payload") || params.get("data");
+    if (payloadValue) {
+      const parsedPayload = parseJsonSafely(payloadValue);
+      if (parsedPayload && typeof parsedPayload === "object") {
+        return parsedPayload as Record<string, unknown>;
+      }
+    }
+
+    return Object.fromEntries(params.entries());
+  }
+
+  const parsed = parseJsonSafely(trimmedBody);
+  return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+}
+
 /**
  * Paymob Transaction Callback (POST)
  *
@@ -15,11 +63,13 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parsePaymobCallbackBody(req);
     const txn = body?.obj;
 
     if (!txn) {
-      console.error("[Paymob Callback] No transaction object in body");
+      console.error("[Paymob Callback] No transaction object in body", {
+        contentType: req.headers.get("content-type"),
+      });
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
