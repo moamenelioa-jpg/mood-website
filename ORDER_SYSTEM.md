@@ -6,7 +6,7 @@ This is a complete, production-ready e-commerce order management system with:
 
 - 🗄️ **Real Database**: SQLite with Prisma ORM
 - 📦 **Complete Order Management**: Create, track, and manage orders
-- 💳 **Multiple Payment Methods**: Cash on Delivery, Stripe, Bank Transfer
+- 💳 **Multiple Payment Methods**: Cash on Delivery, Paymob, Bank Transfer
 - 🚚 **Shipping-Ready Architecture**: Prepared for shipping company integration
 - 👔 **Admin API**: Full order management capabilities
 - 📊 **Order Statistics**: Dashboard-ready analytics
@@ -43,7 +43,7 @@ npm run dev
 | subtotal | Float | Items total |
 | shippingFee | Float | Shipping cost |
 | total | Float | Grand total |
-| paymentMethod | String | cod, stripe, bank_transfer |
+| paymentMethod | String | cod, paymob, bank_transfer |
 | paymentStatus | String | unpaid, pending, paid, failed |
 | orderStatus | String | pending, confirmed, processing, shipped, delivered, cancelled |
 | shippingCompany | String? | Shipping company name |
@@ -162,7 +162,7 @@ PATCH /api/admin/orders/[id]
 **Or use actions:**
 ```json
 { "action": "cancel" }
-{ "action": "mark_paid", "stripePaymentId": "pi_xxx" }
+{ "action": "mark_paid" }
 ```
 
 #### Cancel Order
@@ -177,10 +177,10 @@ DELETE /api/admin/orders/[id]
 DATABASE_URL="file:./prisma/dev.db"
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
-# Stripe (optional, for card payments)
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_PUBLISHABLE_KEY=pk_test_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
+# Paymob (for card payments)
+PAYMOB_API_KEY=your_paymob_api_key
+PAYMOB_INTEGRATION_ID=your_integration_id
+PAYMOB_IFRAME_ID=your_iframe_id
 
 # Admin API (required for production)
 ADMIN_API_KEY=your_secure_random_key
@@ -249,7 +249,7 @@ npx prisma migrate dev --name your_migration_name
    ```
 3. Run migrations: `npx prisma migrate deploy`
 4. Set `ADMIN_API_KEY` to a secure random string
-5. Configure Stripe webhook endpoint
+5. Configure Paymob callback endpoint
 
 ## File Structure
 
@@ -260,8 +260,8 @@ mood-website/
 │   │   ├── orders/           # Customer order API
 │   │   ├── admin/
 │   │   │   └── orders/       # Admin order management
-│   │   └── stripe/
-│   │       └── webhook/      # Stripe webhook
+│   │   └── paymob/
+│   │       └── callback/     # Paymob callback
 │   ├── checkout/             # Checkout page
 │   ├── success/              # Order success page
 │   ├── cancel/               # Payment cancelled page
