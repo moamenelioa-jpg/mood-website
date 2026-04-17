@@ -198,26 +198,28 @@ export default function MoodWorldClassStore() {
     <div dir="rtl" className="min-h-screen bg-[#f2f7f4] text-[#2b170d]">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />
 
-      <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
+      <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-          <a href="#home" className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
-            <div className="relative h-16 w-16 overflow-hidden">
-  <Image
-    src="/logo.png"
-    alt="Mood Premium Peanut Butter Logo"
-    fill
-    sizes="64px"
-    className="object-contain"
-    priority
-  />
-</div>
+          {/* Logo + Brand — far right (first child in RTL flex) */}
+          <a href="#home" className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
+            <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
+              <Image
+                src="/logo.png"
+                alt="Mood Premium Peanut Butter Logo"
+                fill
+                sizes="64px"
+                className="object-contain"
+                priority
+              />
+            </div>
             <div className="leading-tight">
-              <div className="text-5xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a]">Mood</div>
-              <div className="text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a]">Premium Peanut Butter</div>
+              <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">Mood</div>
+              <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
             </div>
           </a>
 
-          <nav className="hidden items-center gap-8 font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] lg:flex text-base">
+          {/* Navigation — center */}
+          <nav className="hidden items-center gap-6 text-base font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] xl:flex">
             {navLinks.map(([href, label]) =>
               href === "products" || href === "export" || href === "blogs" ? (
                 <Link key={href} href={`/${href}`} className="transition hover:text-[#15803d]">
@@ -231,8 +233,8 @@ export default function MoodWorldClassStore() {
             )}
           </nav>
 
-          <div className="flex items-center gap-3">
-            {/* Social Media Icons */}
+          {/* Actions — far left (last child in RTL flex) */}
+          <div className="flex items-center gap-2 lg:gap-3">
             <div className="hidden items-center gap-1 lg:flex">
               {socialLinks.map((social) =>
                 social.name === "Email" ? (
@@ -261,7 +263,6 @@ export default function MoodWorldClassStore() {
 
             <LanguageSwitcher className="hidden lg:inline-flex" />
 
-            {/* Account Icon */}
             <AccountButton />
 
             <button
@@ -271,9 +272,9 @@ export default function MoodWorldClassStore() {
               aria-label={isArabic ? "افتح السلة" : "Open cart"}
             >
               <ShoppingBag className="h-4 w-4" />
-              <span>{isArabic ? "السلة" : "Cart"}</span>
+              <span className="hidden sm:inline">{isArabic ? "السلة" : "Cart"}</span>
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#15803d] px-1.5 text-[10px] font-black text-white">
+                <span className="absolute -start-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#15803d] px-1.5 text-[10px] font-black text-white">
                   {cartCount}
                 </span>
               )}
@@ -286,7 +287,7 @@ export default function MoodWorldClassStore() {
             <button
               type="button"
               onClick={() => setMobileMenu((value) => !value)}
-              className="rounded-full border border-[#edd1b6] bg-white/90 p-2 text-[#5f3b1f] transition lg:hidden"
+              className="rounded-full border border-[#edd1b6] bg-white/90 p-2 text-[#5f3b1f] transition xl:hidden"
               aria-label={isArabic ? "فتح القائمة" : "Toggle menu"}
             >
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -295,8 +296,8 @@ export default function MoodWorldClassStore() {
         </div>
 
         {mobileMenu && (
-          <div className="border-t border-[#f0e2d0] bg-white/95 px-6 py-5 lg:hidden">
-            <div className="flex flex-col gap-4 font-bold uppercase tracking-[0.14em] text-[#5f3b1f] text-base">
+          <div className="border-t border-[#f0e2d0] bg-white/95 px-6 py-5 xl:hidden">
+            <div className="flex flex-col gap-4 text-base font-bold uppercase tracking-[0.14em] text-[#5f3b1f]">
               {navLinks.map(([href, label]) =>
                 href === "products" || href === "export" || href === "blogs" ? (
                   <Link key={href} href={`/${href}`} className="block transition hover:text-[#15803d]">
@@ -309,7 +310,6 @@ export default function MoodWorldClassStore() {
                 )
               )}
             </div>
-            {/* Mobile Social Media Icons */}
             <div className="mt-5 flex items-center gap-3 border-t border-[#f0e2d0] pt-5">
               {socialLinks.map((social) =>
                 social.name === "Email" ? (

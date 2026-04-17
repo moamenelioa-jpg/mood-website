@@ -194,13 +194,13 @@ export default function ExportPage() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
+      <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
           <Link
             href="/"
-            className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80"
+            className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80"
           >
-            <div className="relative h-16 w-16 overflow-hidden">
+            <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
               <Image
                 src="/logo.png"
                 alt="Mood Premium Peanut Butter Logo"
@@ -211,17 +211,17 @@ export default function ExportPage() {
               />
             </div>
             <div className="leading-tight">
-              <div className="text-5xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a]">
+              <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">
                 Mood
               </div>
-              <div className="text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a]">
+              <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">
                 Premium Peanut Butter
               </div>
             </div>
           </Link>
 
           <nav
-            className="hidden items-center gap-8 font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] lg:flex text-base"
+            className="hidden items-center gap-6 text-base font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] xl:flex"
           >
             <Link href="/" className="transition hover:text-[#15803d]">
               {isArabic ? "الرئيسية" : "Home"}
@@ -240,7 +240,7 @@ export default function ExportPage() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             <div className="hidden items-center gap-1 lg:flex">
               {socialLinks.map((social) =>
                 social.name === "Email" ? (
@@ -274,7 +274,7 @@ export default function ExportPage() {
               className="relative inline-flex h-11 items-center gap-2 rounded-full border border-[#edd1b6] bg-white/90 px-4 text-sm font-black text-[#5f3b1f] transition hover:border-[#d2a57b]"
             >
               <ShoppingBag className="h-5 w-5" />
-              <span>{isArabic ? "السلة" : "Cart"}</span>
+              <span className="hidden sm:inline">{isArabic ? "السلة" : "Cart"}</span>
               {cartCount > 0 && (
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#15803d] text-xs text-white">
                   {cartCount}

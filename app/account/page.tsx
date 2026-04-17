@@ -18,15 +18,15 @@ export default function AccountPage() {
         <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />
 
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
+        <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-            <Link href="/" className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
-              <div className="relative h-16 w-16 overflow-hidden">
+            <Link href="/" className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
+              <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
                 <Image src="/logo.png" alt="Mood Premium Peanut Butter Logo" fill sizes="64px" className="object-contain" priority />
               </div>
               <div className="leading-tight">
-                <div className="text-5xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a]">Mood</div>
-                <div className="text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a]">Premium Peanut Butter</div>
+                <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">Mood</div>
+                <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
               </div>
             </Link>
           </div>
@@ -61,15 +61,15 @@ export default function AccountPage() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
+      <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-          <Link href="/" className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80">
-            <div className="relative h-16 w-16 overflow-hidden">
+          <Link href="/" className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
+            <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
               <Image src="/logo.png" alt="Mood Premium Peanut Butter Logo" fill sizes="64px" className="object-contain" priority />
             </div>
             <div className="leading-tight">
-              <div className="text-5xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a]">Mood</div>
-              <div className="text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a]">Premium Peanut Butter</div>
+              <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">Mood</div>
+              <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
             </div>
           </Link>
 
