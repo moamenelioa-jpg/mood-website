@@ -34,10 +34,8 @@ model Order {
   total           Float
   
   // Payment
-  paymentMethod   String   // cod, stripe, bank_transfer
+  paymentMethod   String   // cod, paymob, bank_transfer
   paymentStatus   String   @default("unpaid") // unpaid, pending, paid, failed
-  stripeSessionId String?
-  stripePaymentId String?
   
   // Order Status
   orderStatus     String   @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled

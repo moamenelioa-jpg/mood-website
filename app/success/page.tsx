@@ -57,7 +57,6 @@ function SuccessContent() {
 
   const getPaymentIcon = (method: string) => {
     switch (method) {
-      case "stripe":
       case "paymob":
         return <CreditCard className="h-5 w-5 text-[#5469d4]" />;
       case "bank_transfer":
@@ -69,7 +68,6 @@ function SuccessContent() {
 
   const getPaymentLabel = (method: string) => {
     switch (method) {
-      case "stripe":
       case "paymob":
         return t("checkout.cardPayment");
       case "bank_transfer":

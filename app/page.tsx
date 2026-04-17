@@ -279,9 +279,9 @@ export default function MoodWorldClassStore() {
               )}
             </button>
 
-            <button className="hidden rounded-full bg-[#15803d] px-6 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-lg shadow-[#15803d]/25 transition hover:bg-[#7f4d1d] lg:inline-flex">
+            <Link href="/products" className="hidden rounded-full bg-[#15803d] px-6 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-lg shadow-[#15803d]/25 transition hover:bg-[#7f4d1d] lg:inline-flex">
               {isArabic ? "تسوق الآن" : "Shop Now"}
-            </button>
+            </Link>
 
             <button
               type="button"
@@ -415,18 +415,18 @@ export default function MoodWorldClassStore() {
               <div className="absolute -right-10 bottom-16 h-36 w-36 rounded-full bg-[#15803d]/15 blur-3xl" />
 
               <div className="overflow-hidden rounded-[3rem] border border-white/80 bg-white/80 p-4 shadow-[0_35px_90px_rgba(78,41,12,0.14)] backdrop-blur-md sm:p-6">
-                <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
-                  <div className="rounded-[2.2rem] bg-[linear-gradient(180deg,#fff7ef_0%,#f0dfc1_55%,#cea67b_100%)] p-6">
-                    <div className="flex items-center justify-between text-xs font-black uppercase tracking-[0.24em] text-[#7c4b24]">
+                <div className="grid gap-6">
+                  <div className="relative overflow-hidden rounded-[2.2rem]">
+                    <div className="absolute inset-0 z-10 flex items-start justify-between p-6 text-xs font-black uppercase tracking-[0.24em] text-white drop-shadow-md">
                       <span>{isArabic ? "المنتج المفضل" : "Favorite product"}</span>
                       <span>2026</span>
                     </div>
-                    <div className="relative mt-8 aspect-[4/5] w-full overflow-hidden rounded-[2rem] bg-[#f8efe0] shadow-inner shadow-[#b88e5d]/10">
+                    <div className="relative aspect-[16/9] w-full">
                       <Image
                         src="/products/crunchy.jfif"
                         alt={isArabic ? "زبدة فول سوداني كرنشي من موود" : "Mood crunchy peanut butter jar - premium natural"}
                         fill
-                        sizes="(max-width: 768px) 80vw, 30vw"
+                        sizes="(max-width: 768px) 90vw, 60vw"
                         className="object-cover"
                         priority
                       />

@@ -82,7 +82,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     }
 
     if (body.action === "mark_paid") {
-      const order = await markOrderPaid(id, body.stripePaymentId);
+      const order = await markOrderPaid(id);
       return NextResponse.json({ success: true, order, message: "Order marked as paid" });
     }
 

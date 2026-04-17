@@ -77,14 +77,6 @@ export async function getOrderByOrderNumber(orderNumber: string): Promise<Order 
   return order as Order | null;
 }
 
-export async function getOrderByStripeSession(sessionId: string): Promise<Order | null> {
-  const order = await prisma.order.findFirst({
-    where: { stripeSessionId: sessionId },
-    include: { items: true },
-  });
-  return order as Order | null;
-}
-
 export async function getOrdersByPhone(phone: string): Promise<Order[]> {
   const orders = await prisma.order.findMany({
     where: { phone: { contains: phone } },
@@ -196,46 +188,13 @@ export async function updateOrder(
   return order as Order;
 }
 
-export async function updateOrderByStripeSession(
-  sessionId: string,
-  updates: Partial<Order>
-): Promise<Order | null> {
-  const order = await prisma.order.findFirst({
-    where: { stripeSessionId: sessionId },
-  });
-
-  if (!order) return null;
-
-  const updated = await prisma.order.update({
-    where: { id: order.id },
-    data: updates as any,
-    include: { items: true },
-  });
-
-  return updated as Order;
-}
-
-export async function setStripeSession(
-  orderId: string,
-  stripeSessionId: string
-): Promise<Order | null> {
-  const order = await prisma.order.update({
-    where: { id: orderId },
-    data: { stripeSessionId },
-    include: { items: true },
-  });
-  return order as Order;
-}
-
 export async function markOrderPaid(
-  orderId: string,
-  stripePaymentId?: string
+  orderId: string
 ): Promise<Order | null> {
   const order = await prisma.order.update({
     where: { id: orderId },
     data: {
       paymentStatus: PaymentStatuses.PAID,
-      stripePaymentId: stripePaymentId || null,
       orderStatus: OrderStatuses.CONFIRMED,
     },
     include: { items: true },

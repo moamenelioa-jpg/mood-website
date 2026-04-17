@@ -105,8 +105,8 @@ export default function CartDrawer() {
                   </div>
                   <p className="mt-3 text-xs leading-5 text-[#6f4d34]">
                     {isArabic
-                      ? "ادفع نقداً عند الاستلام أو بالبطاقة عبر Stripe الآمن."
-                      : "Pay cash on delivery or securely by card via Stripe."}
+                      ? "ادفع نقداً عند الاستلام أو بالبطاقة بشكل آمن."
+                      : "Pay cash on delivery or securely by card."}
                   </p>
                 </div>
               </div>

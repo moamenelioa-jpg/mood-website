@@ -14,7 +14,6 @@ export interface CartItem {
 
 export const PaymentMethods = {
   COD: "cod",
-  STRIPE: "stripe",
   PAYMOB: "paymob",
   BANK_TRANSFER: "bank_transfer",
 } as const;
@@ -86,8 +85,6 @@ export interface Order {
   // Payment
   paymentMethod: string;
   paymentStatus: string;
-  stripeSessionId?: string | null;
-  stripePaymentId?: string | null;
   
   // Order Status
   orderStatus: string;

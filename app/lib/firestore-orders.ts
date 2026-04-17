@@ -38,7 +38,7 @@ export interface FirestoreOrderInput {
   total: number;
   subtotal: number;
   shippingFee: number;
-  paymentMethod: "cod" | "stripe" | "paymob" | "bank_transfer";
+  paymentMethod: "cod" | "paymob" | "bank_transfer";
 }
 
 export interface FirestoreOrder extends FirestoreOrderInput {
@@ -46,8 +46,6 @@ export interface FirestoreOrder extends FirestoreOrderInput {
   orderNumber: string;
   orderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   paymentStatus: "unpaid" | "pending" | "paid" | "failed";
-  stripeSessionId?: string;
-  stripePaymentId?: string;
   paymobOrderId?: string;
   paymobTransactionId?: string;
   createdAt: Timestamp;
