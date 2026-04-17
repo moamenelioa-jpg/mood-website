@@ -11,6 +11,7 @@ import ContactFormModal from "@/app/lib/contact-form-modal";
 import { AuthProvider } from "@/app/lib/auth-context";
 import AuthModal from "@/app/lib/auth-modal";
 import { CommentsProvider } from "@/app/lib/comments-context";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -184,6 +185,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans rtl:font-cairo">
+        <Analytics />
         <FirebaseAnalytics />
         <LanguageProvider>
           <AuthProvider>
