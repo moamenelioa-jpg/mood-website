@@ -188,7 +188,7 @@ export default function ExportPage() {
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
+      dir="rtl"
       className="min-h-screen bg-[#f2f7f4] text-[#2b170d]"
     >
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />

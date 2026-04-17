@@ -184,7 +184,7 @@ export default function ContactFormModal() {
 
       {/* Modal */}
       <div
-        dir={isArabic ? "rtl" : "ltr"}
+        dir="rtl"
         className="fixed inset-0 z-[90] flex items-center justify-center p-4"
       >
         <div

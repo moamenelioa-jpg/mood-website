@@ -81,7 +81,7 @@ export default function AuthModal() {
         }}
       />
       <div
-        dir={isArabic ? "rtl" : "ltr"}
+        dir="rtl"
         className="relative w-full max-w-md mx-4 rounded-2xl bg-white p-8 shadow-2xl"
       >
         <button

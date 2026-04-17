@@ -58,11 +58,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     setMounted(true);
   }, []);
 
-  // Update HTML attributes when language changes
+  // Update HTML lang attribute when language changes (keep dir always RTL)
   useEffect(() => {
     if (mounted) {
-      const dir = getDirection(language);
-      document.documentElement.setAttribute("dir", dir);
       document.documentElement.setAttribute("lang", language);
       localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     }

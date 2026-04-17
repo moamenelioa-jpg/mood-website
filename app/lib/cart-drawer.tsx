@@ -19,7 +19,7 @@ export default function CartDrawer() {
         onClick={() => setCartOpen(false)}
       />
       <aside
-        dir={isArabic ? "rtl" : "ltr"}
+        dir="rtl"
         className="fixed right-0 top-0 z-[70] h-full w-full max-w-md overflow-y-auto bg-white shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-[#f0dfc7] px-6 py-5">
