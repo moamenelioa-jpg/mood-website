@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
+import { getAuth, Auth } from "firebase/auth";
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -24,6 +25,7 @@ if (!firebaseConfig.projectId) {
 // Initialize Firebase App (singleton pattern)
 let app: FirebaseApp;
 let db: Firestore;
+let auth: Auth;
 let analytics: Analytics | null = null;
 
 function initializeFirebase(): FirebaseApp {
@@ -40,6 +42,7 @@ function initializeFirebase(): FirebaseApp {
 // Initialize immediately
 app = initializeFirebase();
 db = getFirestore(app);
+auth = getAuth(app);
 console.log("[Firebase] Firestore initialized successfully");
 
 // Get Firebase App instance
@@ -70,4 +73,4 @@ export async function getFirebaseAnalytics(): Promise<Analytics | null> {
 }
 
 // Export instances for direct use
-export { app, db };
+export { app, db, auth };

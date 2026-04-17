@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getFirestoreOrderByNumber,
   updateFirestoreOrder,
-} from "@/app/lib/firestore-orders";
+} from "@/app/lib/firestore-orders-admin";
 import { verifyPaymobHmac } from "@/app/lib/paymob";
 
 /**

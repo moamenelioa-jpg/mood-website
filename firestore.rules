@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Orders collection ──────────────────────────────────────
+    // Anyone can CREATE an order (anonymous checkout).
+    // Only admins can READ, UPDATE, DELETE.
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null
+                                  && request.auth.token.admin == true;
+    }
+
+    // ── Admins collection ──────────────────────────────────────
+    // Only admins can read the admins list.
+    // Only admins can write (managed via Admin SDK server-side,
+    // but rules here add defence-in-depth).
+    match /admins/{adminUid} {
+      allow read, write: if request.auth != null
+                         && request.auth.token.admin == true;
+    }
+
+    // ── Contact messages ──────────────────────────────────────
+    // Anyone can submit a contact message (no auth required).
+    // Only admins can read them.
+    match /contactMessages/{messageId} {
+      allow create: if request.resource.data.keys().hasAll(['fullName', 'email', 'subject', 'message'])
+                    && request.resource.data.fullName is string
+                    && request.resource.data.email is string
+                    && request.resource.data.subject is string
+                    && request.resource.data.message is string;
+      allow read, update, delete: if request.auth != null
+                                  && request.auth.token.admin == true;
+    }
+
+    // ── Counters (order sequencing) ────────────────────────────
+    // Allow reads/writes to the counter documents so order numbers
+    // can be generated without auth (server-side Admin SDK bypasses
+    // these rules, but setting them explicitly is best practice).
+    match /counters/{counterId} {
+      allow read, write: if false; // server-side only via Admin SDK
+    }
+
+    // ── Deny everything else ───────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

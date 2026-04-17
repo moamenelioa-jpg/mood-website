@@ -199,7 +199,7 @@ export default function MoodWorldClassStore() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />
 
       <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+        <div className="flex w-full items-center justify-between px-4 py-4 lg:px-8">
           {/* Logo + Brand — far right (first child in RTL flex) */}
           <a href="#home" className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
             <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
@@ -213,7 +213,7 @@ export default function MoodWorldClassStore() {
               />
             </div>
             <div className="leading-tight">
-              <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">Mood</div>
+              <div className="text-2xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] sm:text-4xl lg:text-5xl">Mood</div>
               <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
             </div>
           </a>
@@ -221,7 +221,7 @@ export default function MoodWorldClassStore() {
           {/* Navigation — center */}
           <nav className="hidden items-center gap-6 text-base font-semibold uppercase tracking-[0.12em] text-[#5f3b1f] xl:flex">
             {navLinks.map(([href, label]) =>
-              href === "products" || href === "export" || href === "blogs" ? (
+              href === "products" || href === "export" || href === "blogs" || href === "contact" ? (
                 <Link key={href} href={`/${href}`} className="transition hover:text-[#15803d]">
                   {isArabic ? label.ar : label.en}
                 </Link>
@@ -299,7 +299,7 @@ export default function MoodWorldClassStore() {
           <div className="border-t border-[#f0e2d0] bg-white/95 px-6 py-5 xl:hidden">
             <div className="flex flex-col gap-4 text-base font-bold uppercase tracking-[0.14em] text-[#5f3b1f]">
               {navLinks.map(([href, label]) =>
-                href === "products" || href === "export" || href === "blogs" ? (
+                href === "products" || href === "export" || href === "blogs" || href === "contact" ? (
                   <Link key={href} href={`/${href}`} className="block transition hover:text-[#15803d]">
                     {isArabic ? label.ar : label.en}
                   </Link>
@@ -349,7 +349,7 @@ export default function MoodWorldClassStore() {
               </div>
 
               <div className="space-y-5">
-                <h1 className="text-5xl font-black leading-tight tracking-[-0.05em] text-[#2d170d] sm:text-6xl lg:text-7xl">
+                <h1 className="text-3xl font-black leading-tight tracking-[-0.05em] text-[#2d170d] sm:text-5xl lg:text-7xl">
                   {isArabic ? "زبدة فول سوداني بروح فاخرة" : "Premium peanut butter for modern shelves."}
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-[#5f4330] sm:text-xl">
@@ -373,7 +373,7 @@ export default function MoodWorldClassStore() {
                 </button>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                 {heroBadges.map((badge) => (
                   <div
                     key={badge.en}
@@ -488,7 +488,7 @@ export default function MoodWorldClassStore() {
               <div className="text-sm font-black uppercase tracking-[0.32em] text-[#15803d]">
                 {isArabic ? "مجموعة مميزة" : "Featured range"}
               </div>
-              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-[#2d170d] md:text-5xl">
+              <h2 className="mt-4 text-2xl font-black tracking-[-0.04em] text-[#2d170d] sm:text-4xl md:text-5xl">
                 {isArabic
                   ? "منتجات موود. جودة فائقة وطعم لا يقاوم"
                   : "Products presented with premium polish."}
@@ -510,7 +510,7 @@ export default function MoodWorldClassStore() {
               >
                 <div className="relative overflow-hidden bg-[#f9f0e6]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_30%)]" />
-                  <div className="relative aspect-[5/6] w-full min-h-[22rem] overflow-hidden rounded-[2rem] bg-[#f9f0e6] md:aspect-[4/5]">
+                  <div className="relative aspect-[5/6] w-full overflow-hidden rounded-[2rem] bg-[#f9f0e6] md:aspect-[4/5]">
                     <Image
                       src={product.image}
                       alt={isArabic ? product.nameAr : product.nameEn}
@@ -522,10 +522,7 @@ export default function MoodWorldClassStore() {
                   <span className="absolute left-4 top-4 rounded-full bg-[#15803d] px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-white">
                     {isArabic ? product.badgeAr : product.badgeEn}
                   </span>
-                  <span className="absolute right-4 top-4 rounded-full bg-[#f59e0b] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white flex items-center gap-1">
-                    <Truck className="h-3 w-3" />
-                    {isArabic ? "شحن مجاني" : "Free Shipping"}
-                  </span>
+
                 </div>
 
                 <div className="space-y-4 px-5 pb-6 pt-5">
@@ -575,16 +572,16 @@ export default function MoodWorldClassStore() {
           <div className="grid gap-8 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
             <div className="rounded-[2.4rem] bg-gradient-to-r from-[#16a34a] to-[#22c55e] p-10 text-white shadow-[0_30px_80px_rgba(47,27,13,0.22)]">
               <div className="text-sm font-black uppercase tracking-[0.28em] text-[#f4d79a]">
-                {isArabic ? "قصة البراند" : "Brand story"}
+                {isArabic ? "قصة موود" : "Brand story"}
               </div>
-              <h2 className="mt-5 text-4xl font-black leading-tight tracking-[-0.04em] md:text-5xl">
+              <h2 className="mt-5 text-2xl font-black leading-tight tracking-[-0.04em] sm:text-4xl md:text-5xl">
                 {isArabic
-                  ? "تصميم عالمي لمنتج يروي قصة قوية."
+                  ? "  موود ليست مجرد منتج... بل تجربة فريدة في المذاق."
                   : "Design that turns peanut butter into a premium brand."}
               </h2>
               <p className="mt-6 max-w-xl text-lg leading-8 text-white/80">
                 {isArabic
-                  ? "الموقع لا يبيع منتجًا فقط، بل يبني قيمة، يضع الثقة في المقدمة، ويجعل كل قسم يتكلم بلغة الفخامة."
+                  ? "في شركة جى اف، نصنع منتجات بجودة عالية وطعم لا يُنسى، لنمنحك تجربة تستحق التكرار."
                   : "This experience builds value, puts trust front and center, and positions every section as premium storytelling."}
               </p>
               <button className="mt-10 rounded-full bg-[#f6eadb] px-8 py-4 text-sm font-black uppercase tracking-[0.14em] text-[#2b170d] shadow-lg shadow-[#523211]/10 transition hover:bg-white">
@@ -627,7 +624,7 @@ export default function MoodWorldClassStore() {
                 <div className="text-sm font-black uppercase tracking-[0.28em] text-[#15803d]">
                   {isArabic ? "آراء العملاء" : "Customer voice"}
                 </div>
-                <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-[#2d170d] md:text-5xl">
+                <h2 className="mt-4 text-2xl font-black tracking-[-0.04em] text-[#2d170d] sm:text-4xl md:text-5xl">
                   {isArabic
                     ? "التجربة يجب أن تشعر بالفخامة والثقة."
                     : "The experience should feel premium, trusted, and inviting."}
@@ -699,7 +696,7 @@ export default function MoodWorldClassStore() {
                 <div className="text-sm font-black uppercase tracking-[0.28em] text-[#f9d49c]">
                   {isArabic ? "الجملة والتوزيع" : "Wholesale & distribution"}
                 </div>
-                <h2 className="mt-4 text-4xl font-black leading-tight tracking-[-0.04em] md:text-5xl">
+                <h2 className="mt-4 text-2xl font-black leading-tight tracking-[-0.04em] sm:text-4xl md:text-5xl">
                   {isArabic
                     ? "  عروض خاصة وحصرية لتجار الجملة والموزعين   ."
                     : "  Special and exclusive offers for wholesalers and distributors   ."}

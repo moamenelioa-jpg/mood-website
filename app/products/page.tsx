@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ShoppingBag, Truck, ArrowLeft, ArrowRight, Mail, User, LogOut } from "lucide-react";
+import { ShoppingBag, ArrowLeft, ArrowRight, Mail, User, LogOut, Menu, X } from "lucide-react";
 import { useLanguage, LanguageSwitcher } from "@/app/lib/language-context";
 import { useCart } from "@/app/lib/cart-context";
 import { useContactForm } from "@/app/lib/contact-form-context";
@@ -125,6 +125,7 @@ export default function ProductsPage() {
   const { isArabic, formatPrice } = useLanguage();
   const { addToCart, cartCount } = useCart();
   const { openContactForm } = useContactForm();
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#f2f7f4] text-[#2b170d]">
@@ -132,7 +133,7 @@ export default function ProductsPage() {
 
       {/* Header */}
       <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+        <div className="flex w-full items-center justify-between px-4 py-4 lg:px-8">
           <Link href="/" className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
             <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
               <Image
@@ -145,7 +146,7 @@ export default function ProductsPage() {
               />
             </div>
             <div className="leading-tight">
-              <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">Mood</div>
+              <div className="text-2xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] sm:text-4xl lg:text-5xl">Mood</div>
               <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
             </div>
           </Link>
@@ -166,7 +167,7 @@ export default function ProductsPage() {
             <Link href="/#wholesale" className="transition hover:text-[#15803d]">
               {isArabic ? "الجملة" : "Wholesale"}
             </Link>
-            <Link href="/#contact" className="transition hover:text-[#15803d]">
+            <Link href="/contact" className="transition hover:text-[#15803d]">
               {isArabic ? "تواصل" : "Contact"}
             </Link>
           </nav>
@@ -214,8 +215,68 @@ export default function ProductsPage() {
                 </span>
               )}
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenu((v) => !v)}
+              className="rounded-full border border-[#edd1b6] bg-white/90 p-2 text-[#5f3b1f] transition xl:hidden"
+              aria-label={isArabic ? "فتح القائمة" : "Toggle menu"}
+            >
+              {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {mobileMenu && (
+          <div className="border-t border-[#f0e2d0] bg-white/95 px-6 py-5 xl:hidden">
+            <div className="flex flex-col gap-4 text-base font-bold uppercase tracking-[0.14em] text-[#5f3b1f]">
+              <Link href="/" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "الرئيسية" : "Home"}
+              </Link>
+              <Link href="/products" onClick={() => setMobileMenu(false)} className="block text-[#15803d]">
+                {isArabic ? "المنتجات" : "Products"}
+              </Link>
+              <Link href="/export" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "التصدير" : "Export"}
+              </Link>
+              <Link href="/blogs" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "عن موود" : "Brand Story"}
+              </Link>
+              <Link href="/#wholesale" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "الجملة" : "Wholesale"}
+              </Link>
+              <Link href="/contact" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "تواصل" : "Contact"}
+              </Link>
+            </div>
+            <div className="mt-5 flex items-center gap-3 border-t border-[#f0e2d0] pt-5">
+              {socialLinks.map((social) =>
+                social.name === "Email" ? (
+                  <button
+                    key={social.name}
+                    onClick={openContactForm}
+                    className={`rounded-full p-3 border border-[#edd1b6] transition-all duration-200 hover:scale-110 ${social.color} ${social.hoverBg}`}
+                    aria-label={social.name}
+                  >
+                    <social.icon className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`rounded-full p-3 border border-[#edd1b6] transition-all duration-200 hover:scale-110 ${social.color} ${social.hoverBg}`}
+                    aria-label={social.name}
+                  >
+                    <social.icon className="h-5 w-5" />
+                  </a>
+                )
+              )}
+              <LanguageSwitcher />
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
@@ -245,7 +306,7 @@ export default function ProductsPage() {
           <span className="inline-block rounded-full bg-[#15803d]/10 px-4 py-2 text-sm font-black uppercase tracking-[0.2em] text-[#15803d]">
             {isArabic ? "منتجاتنا" : "Our Products"}
           </span>
-          <h1 className="mt-6 text-4xl font-black tracking-tight text-[#2d170d] md:text-5xl lg:text-6xl">
+          <h1 className="mt-6 text-2xl font-black tracking-tight text-[#2d170d] sm:text-4xl md:text-5xl lg:text-6xl">
             {isArabic ? "تشكيلة موود الكاملة" : "The Full Mood Collection"}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-[#6a4f37]">
@@ -264,7 +325,7 @@ export default function ProductsPage() {
             >
               <div className="relative overflow-hidden bg-[#f9f0e6]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_30%)]" />
-                <div className="relative aspect-[5/6] w-full min-h-[22rem] overflow-hidden rounded-[2rem] bg-[#f9f0e6] md:aspect-[4/5]">
+                <div className="relative aspect-[5/6] w-full overflow-hidden rounded-[2rem] bg-[#f9f0e6] md:aspect-[4/5]">
                   <Image
                     src={product.image}
                     alt={isArabic ? product.nameAr : product.nameEn}
@@ -276,10 +337,7 @@ export default function ProductsPage() {
                 <span className="absolute left-4 top-4 rounded-full bg-[#15803d] px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-white">
                   {isArabic ? product.badgeAr : product.badgeEn}
                 </span>
-                <span className="absolute right-4 top-4 rounded-full bg-[#f59e0b] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white flex items-center gap-1">
-                  <Truck className="h-3 w-3" />
-                  {isArabic ? "شحن مجاني" : "Free Shipping"}
-                </span>
+
               </div>
 
               <div className="space-y-4 px-5 pb-6 pt-5">
@@ -322,8 +380,8 @@ export default function ProductsPage() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/80">
             {isArabic
-              ? "اضغط على زر الإضافة للسلة واستمتع بتجربة تسوق فاخرة مع شحن مجاني لجميع الطلبات"
-              : "Add your favorites to cart and enjoy a premium shopping experience with free shipping on all orders"}
+              ? "اضغط على زر الإضافة للسلة واستمتع بتجربة تسوق فاخرة"
+              : "Add your favorites to cart and enjoy a premium shopping experience"}
           </p>
           <Link
             href="/checkout"

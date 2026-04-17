@@ -36,8 +36,8 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
 
-  // Shipping fee calculation (you can customize this)
-  const shippingFee = 0; // Free shipping, or calculate based on governorate
+  // Flat shipping fee for all orders across Egypt
+  const shippingFee = 60;
   const orderTotal = cartTotal + shippingFee;
 
   // Get translated governorate name
@@ -445,6 +445,23 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   </label>
+
+                  {/* Bank Details Panel */}
+                  {paymentMethod === "bank_transfer" && (
+                    <div className="rounded-xl border-2 border-[#ca8a04]/20 bg-[#fefce8] p-4 mt-1">
+                      <h3 className="font-bold text-[#854d0e] mb-3 text-sm">
+                        {t("checkout.bankDetails")}
+                      </h3>
+                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5">
+                        <p><strong className="text-[#854d0e]">{t("checkout.bankName")}:</strong> QNB - Qatar National Bank</p>
+                        <p><strong className="text-[#854d0e]">{t("checkout.accountHolder")}:</strong> MOAMEN ABDALLAH ELIWA</p>
+                        <p><strong className="text-[#854d0e]">{t("checkout.iban")}:</strong> EG120037002708181020791449735</p>
+                      </div>
+                      <p className="text-xs text-[#a16207] mt-2">
+                        {t("checkout.bankTransferNote")}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -519,9 +536,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-[#6f4d34]">
                   <span>{t("cart.shipping")}</span>
-                  <span className={shippingFee === 0 ? "text-[#15803d]" : "ltr-nums"}>
-                    {shippingFee === 0 ? t("common.free") : formatPrice(shippingFee)}
-                  </span>
+                  <span className="ltr-nums">{formatPrice(shippingFee)}</span>
                 </div>
                 <div className="flex justify-between text-xl font-black text-[#2b170d] pt-3 border-t border-[#edd1b6]">
                   <span>{t("cart.total")}</span>

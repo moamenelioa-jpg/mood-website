@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,6 +17,8 @@ import {
   Phone,
   User,
   ShoppingBag,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { Order } from "@/app/lib/types";
 import { useLanguage } from "@/app/lib/language-context";
@@ -30,6 +32,10 @@ function SuccessContent() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [proofUploading, setProofUploading] = useState(false);
+  const [proofUploaded, setProofUploaded] = useState(false);
+  const [proofError, setProofError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (orderNumber) {
@@ -38,6 +44,9 @@ function SuccessContent() {
         .then((data) => {
           if (data.success) {
             setOrder(data.order);
+            if (data.order.hasProof) {
+              setProofUploaded(true);
+            }
           }
         })
         .catch(console.error)
@@ -52,6 +61,48 @@ function SuccessContent() {
       navigator.clipboard.writeText(orderNumber);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !order) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setProofError(t("success.proofInvalidType"));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setProofError(t("success.proofTooLarge"));
+      return;
+    }
+
+    setProofUploading(true);
+    setProofError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("orderNumber", order.orderNumber);
+      formData.append("receipt", file);
+
+      const res = await fetch("/api/orders/proof", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setProofUploaded(true);
+      } else {
+        setProofError(data.error || t("success.proofUploadFailed"));
+      }
+    } catch {
+      setProofError(t("success.proofUploadFailed"));
+    } finally {
+      setProofUploading(false);
     }
   };
 
@@ -168,15 +219,51 @@ function SuccessContent() {
                 </h3>
                 <div className="text-sm text-[#a16207] space-y-2">
                   <p>{t("success.transferTo")}</p>
-                  <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums">
-                    <p><strong>{t("success.bank")}:</strong> CIB Egypt</p>
-                    <p><strong>{t("success.account")}:</strong> 1234567890</p>
-                    <p><strong>{t("success.accountName")}:</strong> Mood Foods</p>
+                  <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5">
+                    <p><strong>{t("success.bank")}:</strong> QNB - Qatar National Bank</p>
+                    <p><strong>{t("success.accountName")}:</strong> MOAMEN ABDALLAH ELIWA</p>
+                    <p><strong>{t("success.iban")}:</strong> EG120037002708181020791449735</p>
                     <p><strong>{t("success.amount")}:</strong> {formatPrice(order.total)}</p>
                   </div>
                   <p className="text-xs">
                     {t("success.includeOrderNumber")}
                   </p>
+                </div>
+
+                {/* Payment Proof Upload */}
+                <div className="mt-4 pt-3 border-t border-[#ca8a04]/20">
+                  <h4 className="font-bold text-[#854d0e] mb-2 text-sm">{t("success.uploadProof")}</h4>
+                  {proofUploaded ? (
+                    <div className="flex items-center gap-2 text-[#15803d] bg-[#15803d]/10 rounded-lg p-3">
+                      <Check className="h-5 w-5" />
+                      <span className="text-sm font-semibold">{t("success.proofReceived")}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProofUpload}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={proofUploading}
+                        className="flex items-center gap-2 rounded-lg bg-white border border-[#ca8a04]/30 px-4 py-2.5 text-sm font-semibold text-[#854d0e] hover:bg-[#fef9c3] transition disabled:opacity-50"
+                      >
+                        {proofUploading ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" />{t("success.uploading")}</>
+                        ) : (
+                          <><Upload className="h-4 w-4" />{t("success.uploadReceipt")}</>
+                        )}
+                      </button>
+                      {proofError && (
+                        <p className="text-xs text-red-600 mt-1">{proofError}</p>
+                      )}
+                      <p className="text-xs text-[#a16207] mt-1">{t("success.proofNote")}</p>
+                    </>
+                  )}
                 </div>
               </div>
             )}

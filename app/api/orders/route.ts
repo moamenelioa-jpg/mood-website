@@ -4,7 +4,7 @@ import {
   getFirestoreOrderById,
   getFirestoreOrderByNumber,
   updateFirestoreOrder,
-} from "@/app/lib/firestore-orders";
+} from "@/app/lib/firestore-orders-admin";
 import {
   CartItem,
   CreateOrderResponse,
@@ -218,7 +218,10 @@ export async function POST(req: Request) {
     }
 
     if (paymentMethod === "bank_transfer") {
-      // Bank transfer - order saved with pending payment
+      // Bank transfer - order saved with pending payment, awaiting proof
+      await updateFirestoreOrder(order.id, {
+        paymentStatus: "pending_verification",
+      });
       return NextResponse.json<CreateOrderResponse>({
         success: true,
         order: order as unknown as Order,
@@ -274,7 +277,13 @@ export async function GET(req: Request) {
       );
     }
 
-    return NextResponse.json({ success: true, order });
+    // Strip proof image from public response (large base64), include flag only
+    const { bankTransferProof, ...orderData } = order as Record<string, unknown>;
+    const hasProof = !!(orderData.receiptImageUrl || bankTransferProof);
+    return NextResponse.json({
+      success: true,
+      order: { ...orderData, hasProof },
+    });
   } catch (error) {
     console.error("Get order error:", error);
     return NextResponse.json(

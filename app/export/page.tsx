@@ -15,10 +15,13 @@ import {
   BadgeCheck,
   ClipboardList,
   Mail,
+  Menu,
+  X,
 } from "lucide-react";
 import { useLanguage, LanguageSwitcher } from "@/app/lib/language-context";
 import { useCart } from "@/app/lib/cart-context";
 import { useContactForm } from "@/app/lib/contact-form-context";
+import { useState } from "react";
 
 // Social Media Icons
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -185,6 +188,7 @@ export default function ExportPage() {
   const { isArabic, formatPrice } = useLanguage();
   const { cartCount, setCartOpen } = useCart();
   const { openContactForm } = useContactForm();
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   return (
     <div
@@ -195,7 +199,7 @@ export default function ExportPage() {
 
       {/* Header */}
       <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+        <div className="flex w-full items-center justify-between px-4 py-4 lg:px-8">
           <Link
             href="/"
             className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80"
@@ -211,7 +215,7 @@ export default function ExportPage() {
               />
             </div>
             <div className="leading-tight">
-              <div className="text-4xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] lg:text-5xl">
+              <div className="text-2xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] sm:text-4xl lg:text-5xl">
                 Mood
               </div>
               <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">
@@ -235,7 +239,7 @@ export default function ExportPage() {
             <Link href="/#wholesale" className="transition hover:text-[#15803d]">
               {isArabic ? "الجملة" : "Wholesale"}
             </Link>
-            <Link href="/#contact" className="transition hover:text-[#15803d]">
+            <Link href="/contact" className="transition hover:text-[#15803d]">
               {isArabic ? "تواصل" : "Contact"}
             </Link>
           </nav>
@@ -281,8 +285,68 @@ export default function ExportPage() {
                 </span>
               )}
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenu((v) => !v)}
+              className="rounded-full border border-[#edd1b6] bg-white/90 p-2 text-[#5f3b1f] transition xl:hidden"
+              aria-label={isArabic ? "فتح القائمة" : "Toggle menu"}
+            >
+              {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {mobileMenu && (
+          <div className="border-t border-[#f0e2d0] bg-white/95 px-6 py-5 xl:hidden">
+            <div className="flex flex-col gap-4 text-base font-bold uppercase tracking-[0.14em] text-[#5f3b1f]">
+              <Link href="/" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "الرئيسية" : "Home"}
+              </Link>
+              <Link href="/products" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "المنتجات" : "Products"}
+              </Link>
+              <Link href="/export" onClick={() => setMobileMenu(false)} className="block text-[#15803d]">
+                {isArabic ? "التصدير" : "Export"}
+              </Link>
+              <Link href="/blogs" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "عن موود" : "Brand Story"}
+              </Link>
+              <Link href="/#wholesale" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "الجملة" : "Wholesale"}
+              </Link>
+              <Link href="/contact" onClick={() => setMobileMenu(false)} className="block transition hover:text-[#15803d]">
+                {isArabic ? "تواصل" : "Contact"}
+              </Link>
+            </div>
+            <div className="mt-5 flex items-center gap-3 border-t border-[#f0e2d0] pt-5">
+              {socialLinks.map((social) =>
+                social.name === "Email" ? (
+                  <button
+                    key={social.name}
+                    onClick={openContactForm}
+                    className={`rounded-full p-3 border border-[#edd1b6] transition-all duration-200 hover:scale-110 ${social.color} ${social.hoverBg}`}
+                    aria-label={social.name}
+                  >
+                    <social.icon className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`rounded-full p-3 border border-[#edd1b6] transition-all duration-200 hover:scale-110 ${social.color} ${social.hoverBg}`}
+                    aria-label={social.name}
+                  >
+                    <social.icon className="h-5 w-5" />
+                  </a>
+                )
+              )}
+              <LanguageSwitcher />
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
@@ -312,7 +376,7 @@ export default function ExportPage() {
           <span className="inline-block rounded-full bg-[#15803d]/10 px-4 py-2 text-sm font-black uppercase tracking-[0.2em] text-[#15803d]">
             {isArabic ? "التصدير الدولي" : "International Export"}
           </span>
-          <h1 className="mt-6 text-4xl font-black tracking-tight text-[#2d170d] md:text-5xl lg:text-6xl">
+          <h1 className="mt-6 text-2xl font-black tracking-tight text-[#2d170d] sm:text-4xl md:text-5xl lg:text-6xl">
             {isArabic
               ? "صُنع في مصر، يُصدّر للعالم"
               : "Made in Egypt, Exported Worldwide"}

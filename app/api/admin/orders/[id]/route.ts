@@ -6,18 +6,7 @@ import {
   markOrderPaid,
 } from "@/app/lib/orders";
 import { OrderUpdateInput, OrderStatuses, PaymentStatuses } from "@/app/lib/types";
-
-// Simple admin key validation
-function validateAdminAccess(req: Request): boolean {
-  const adminKey = req.headers.get("x-admin-key");
-  const validKey = process.env.ADMIN_API_KEY;
-
-  if (process.env.NODE_ENV === "development" && !validKey) {
-    return true;
-  }
-
-  return adminKey === validKey;
-}
+import { requireAdmin } from "@/app/lib/admin-auth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -25,13 +14,10 @@ interface RouteParams {
 
 // GET /api/admin/orders/[id] - Get single order
 export async function GET(req: Request, { params }: RouteParams) {
+  const admin = await requireAdmin(req);
+  if (admin instanceof Response) return admin;
+
   try {
-    if (!validateAdminAccess(req)) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
 
     const { id } = await params;
     const order = await getOrderById(id);
@@ -55,14 +41,10 @@ export async function GET(req: Request, { params }: RouteParams) {
 
 // PATCH /api/admin/orders/[id] - Update order
 export async function PATCH(req: Request, { params }: RouteParams) {
-  try {
-    if (!validateAdminAccess(req)) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+  const admin = await requireAdmin(req);
+  if (admin instanceof Response) return admin;
 
+  try {
     const { id } = await params;
     const body = await req.json();
 
