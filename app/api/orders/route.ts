@@ -167,7 +167,7 @@ export async function POST(req: Request) {
       return NextResponse.json<CreateOrderResponse>({
         success: true,
         order: order as unknown as Order,
-        redirectUrl: `${baseUrl}/success?order=${order.orderNumber}`,
+        redirectUrl: `/success?order=${order.orderNumber}`,
       });
     }
 
@@ -227,7 +227,7 @@ export async function POST(req: Request) {
       return NextResponse.json<CreateOrderResponse>({
         success: true,
         order: order as unknown as Order,
-        redirectUrl: `${baseUrl}/success?order=${order.orderNumber}&payment=bank`,
+        redirectUrl: `/success?order=${order.orderNumber}&payment=bank`,
       });
     }
 
