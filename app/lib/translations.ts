@@ -74,13 +74,13 @@ export const translations = {
     },
     // Hero badges
     authentic: { en: "Authentic", ar: "طبيعي" },
+    authenticDesc: { en: "100% natural peanut butter with no additives.", ar: "زبدة فول سوداني طبيعية 100% بدون إضافات." },
     smooth: { en: "Smooth", ar: "سلس" },
+    smoothDesc: { en: "Rich, creamy texture in every spoonful.", ar: "قوام كريمي غني في كل ملعقة." },
     trusted: { en: "Trusted", ar: "موثوق" },
+    trustedDesc: { en: "Loved by thousands of happy customers.", ar: "محبوب من آلاف العملاء السعداء." },
     fast: { en: "Fast", ar: "سريع" },
-    badgeDesc: {
-      en: "Sharper messaging, premium clarity, assured confidence.",
-      ar: "تجربة تسوق أكثر وضوحًا وفخامة.",
-    },
+    fastDesc: { en: "Your order is processed and shipped in no time.", ar: "طلبك يُجهّز ويُشحن في أسرع وقت." },
   },
 
   // ==========================================

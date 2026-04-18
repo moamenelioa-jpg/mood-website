@@ -110,10 +110,10 @@ const navLinks = [
 ] as const;
 
 const heroBadges = [
-  { en: "Authentic", ar: "طبيعي" },
-  { en: "Smooth", ar: "سلس" },
-  { en: "Trusted", ar: "موثوق" },
-  { en: "Fast", ar: "سريع" },
+  { en: "Authentic", ar: "طبيعي", descEn: "100% natural peanut butter with no additives.", descAr: "زبدة فول سوداني طبيعية 100% بدون إضافات." },
+  { en: "Smooth", ar: "سلس", descEn: "Rich, creamy texture in every spoonful.", descAr: "قوام كريمي غني في كل ملعقة." },
+  { en: "Trusted", ar: "موثوق", descEn: "Loved by thousands of happy customers.", descAr: "محبوب من آلاف العملاء السعداء." },
+  { en: "Fast", ar: "سريع", descEn: "Your order is processed and shipped in no time.", descAr: "طلبك يُجهّز ويُشحن في أسرع وقت." },
 ] as const;
 
 /* Account button component used in the header */
@@ -381,9 +381,7 @@ export default function MoodWorldClassStore() {
                   >
                     <div className="text-lg font-black text-[#15803d]">{isArabic ? badge.ar : badge.en}</div>
                     <p className="mt-3 text-sm leading-6 text-[#6f4d34]">
-                      {isArabic
-                        ? "تجربة تسوق أكثر وضوحًا وفخامة."
-                        : "Sharper messaging, premium clarity, assured confidence."}
+                      {isArabic ? badge.descAr : badge.descEn}
                     </p>
                   </div>
                 ))}
@@ -396,7 +394,7 @@ export default function MoodWorldClassStore() {
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-[#5f3b1f]">
                     <span className="rounded-full bg-[#f3e2cf] px-3 py-2">{isArabic ? "تجار" : "Retail"}</span>
-                    <span className="rounded-full bg-[#f3e2cf] px-3 py-2">{isArabic ? "مقاهي" : "Cafés"}</span>
+                    <span className="rounded-full bg-[#f3e2cf] px-3 py-2">{isArabic ? "مطاعم" : "Restaurants"}</span>
                     <span className="rounded-full bg-[#f3e2cf] px-3 py-2">{isArabic ? "صحّة" : "Health"}</span>
                   </div>
                 </div>
@@ -455,8 +453,8 @@ export default function MoodWorldClassStore() {
                         <div className="mt-4 text-lg font-black text-[#2b170d]">{isArabic ? "ثقة" : "Trust"}</div>
                         <p className="mt-2 text-sm leading-6 text-[#6f4d34]">
                           {isArabic
-                            ? "هوية أقوى ورسائل أوضح تزيد من مصداقية المنتج."
-                            : "Stronger messaging and clearer product confidence."}
+                            ? "معايير جودة تمنحك راحة واطمئنان"
+                            : "Quality standards that give you peace of mind."}
                         </p>
                       </div>
                       <div className="rounded-[1.8rem] border border-[#ead6c0] bg-white/85 p-5 shadow-sm">
@@ -464,8 +462,8 @@ export default function MoodWorldClassStore() {
                         <div className="mt-4 text-lg font-black text-[#2b170d]">{isArabic ? "سلاسة" : "Smooth flow"}</div>
                         <p className="mt-2 text-sm leading-6 text-[#6f4d34]">
                           {isArabic
-                            ? "رحلة تسوق سهلة، أزرار واضحة، وتركيز على المنتج."
-                            : "A smoother checkout journey with clear calls to action."}
+                            ? "خطوات بسيطة… وطلبك يوصلك بسرعة "
+                            : "Simple steps... and your order arrives to you swiftly."}
                         </p>
                       </div>
                     </div>
@@ -622,12 +620,12 @@ export default function MoodWorldClassStore() {
             <div className="grid gap-10 lg:grid-cols-[1.03fr_0.97fr] lg:items-center">
               <div>
                 <div className="text-sm font-black uppercase tracking-[0.28em] text-[#15803d]">
-                  {isArabic ? "آراء العملاء" : "Customer voice"}
+                  {isArabic ? "آراء عملائنا " : " Customer testimonials"}
                 </div>
                 <h2 className="mt-4 text-2xl font-black tracking-[-0.04em] text-[#2d170d] sm:text-4xl md:text-5xl">
                   {isArabic
-                    ? "التجربة يجب أن تشعر بالفخامة والثقة."
-                    : "The experience should feel premium, trusted, and inviting."}
+                    ? " ثقة حقيقية… وتجربة تستحق التكرار"
+                    : "Real trust... and an experience worth repeating."}
                 </h2>
 
                 <div className="mt-10 rounded-[2rem] bg-[#f8efe3] p-8 shadow-sm">
