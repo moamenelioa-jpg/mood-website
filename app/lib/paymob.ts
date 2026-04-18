@@ -84,7 +84,7 @@ export async function createPaymobIntention(opts: {
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
-      Authorization: secretKey,
+      Authorization: `Token ${secretKey}`,
     },
     body: JSON.stringify(body),
   });
