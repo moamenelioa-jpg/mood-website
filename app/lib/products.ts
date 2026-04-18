@@ -48,10 +48,10 @@ export const products: Product[] = [
     nameAr: "زبدة فول سوداني بالشوكولاتة",
     subtitleEn: "A richer indulgent blend",
     subtitleAr: "مزيج أغنى وأكثر متعة",
-    size: "300g",
+    size: "800g",
     badgeEn: "Trending",
     badgeAr: "رائج",
-    price: 80,
+    price: 85,
     image: "/products/chocolate.jpg",
   },
   {

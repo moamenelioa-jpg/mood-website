@@ -81,22 +81,22 @@ const socialLinks = [
 
 const testimonials = [
   {
-    name: "Nour A.",
+    name: "Nour Hesham",
     textEn:
-      "The brand feels premium, trustworthy, and ready for international shelves.",
-    textAr: "البراند يبدو فاخرًا وموثوقًا وجاهزًا للظهور بشكل عالمي.",
+      "Honestly the best peanut butter I've ever tried, the flavor is so rich and the texture is perfect, especially the crunchy one 🔥",
+    textAr: "أفضل زبدة فول سوداني جربتها فعلًا، الطعم غني جدًا والقوام مثالي، خاصة الكرانشي 🔥",
   },
   {
-    name: "Moamen A.",
+    name: "Ahmed Ali",
     textEn:
-      "Very clean layout, strong product presentation, and more memorable than standard templates.",
-    textAr: "التصميم نظيف جدًا، وعرض المنتجات قوي، وأكثر تميزًا من القوالب العادية.",
+      " Mood's peanut butter is a game-changer for my fitness routine, gives me great energy and tastes natural without any artificial aftertaste.",
+    textAr: " منتج ممتاز للجيم والدايت، بيديني طاقة عالية وطعمه طبيعي بدون أي إحساس صناعي.",
   },
   {
-    name: "Mariam S.",
+    name: "Mariam Saeed",
     textEn:
-      "This style gives the product a real brand identity, not just a generic online shop look.",
-    textAr: "هذا الأسلوب يمنح المنتج هوية حقيقية، وليس مجرد متجر إلكتروني تقليدي.",
+      "I love how versatile Mood's peanut butter is, I use it in smoothies, on toast, and even in baking. The chocolate hazelnut flavor is my absolute favorite! ",
+    textAr: "بحب تنوع استخدامات زبدة موود، بستخدمها في السموزي، أو على التوست، نكهة الشوكولاتة بالبندق هي المفضلة عندى! ",
   },
 ];
 
@@ -127,11 +127,11 @@ function AccountButton() {
       <button
         type="button"
         onClick={openLogin}
-        className="relative inline-flex h-11 items-center gap-2 rounded-full border border-[#edd1b6] bg-white/90 px-4 text-sm font-black text-[#5f3b1f] transition hover:border-[#d2a57b]"
+        className="relative inline-flex h-9 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-full border border-[#edd1b6] bg-white/90 px-2.5 sm:px-4 text-sm font-black text-[#5f3b1f] transition hover:border-[#d2a57b]"
         aria-label={isArabic ? "تسجيل الدخول" : "Sign In"}
       >
-        <User className="h-5 w-5" />
-        <span className="hidden sm:inline">{isArabic ? "حسابي" : "Account"}</span>
+        <User className="h-4 w-4 sm:h-5 sm:w-5" />
+        <span className="hidden md:inline">{isArabic ? "حسابي" : "Account"}</span>
       </button>
     );
   }
@@ -141,12 +141,12 @@ function AccountButton() {
       <button
         type="button"
         onClick={() => setMenuOpen((v) => !v)}
-        className="relative inline-flex h-11 items-center gap-2 rounded-full border border-[#15803d]/30 bg-[#15803d]/10 px-4 text-sm font-black text-[#15803d] transition hover:bg-[#15803d]/20"
+        className="relative inline-flex h-9 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-full border border-[#15803d]/30 bg-[#15803d]/10 px-2.5 sm:px-4 text-sm font-black text-[#15803d] transition hover:bg-[#15803d]/20"
       >
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#15803d] text-[10px] font-black text-white">
+        <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-[#15803d] text-[9px] sm:text-[10px] font-black text-white">
           {user.name.charAt(0).toUpperCase()}
         </div>
-        <span className="hidden sm:inline max-w-[80px] truncate">{user.name}</span>
+        <span className="hidden md:inline max-w-[80px] truncate">{user.name}</span>
       </button>
       {menuOpen && (
         <>
@@ -195,14 +195,14 @@ export default function MoodWorldClassStore() {
   const BackArrow = isArabic ? ArrowRight : ArrowLeft;
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#f2f7f4] text-[#2b170d]">
+    <div dir="rtl" className="min-h-screen bg-[#f2f7f4] text-[#2b170d] overflow-x-hidden">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_25%),linear-gradient(180deg,#f2f7f4_0%,#ecfdf5_40%,#f2f7f4_100%)]" />
 
       <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
-        <div className="flex w-full items-center justify-between px-4 py-4 lg:px-8">
+        <div className="flex w-full items-center justify-between px-3 py-3 sm:px-4 sm:py-4 lg:px-8">
           {/* Logo + Brand — far right (first child in RTL flex) */}
-          <a href="#home" className="flex items-center gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
-            <div className="relative h-14 w-14 overflow-hidden lg:h-16 lg:w-16">
+          <a href="#home" className="flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
+            <div className="relative h-10 w-10 overflow-hidden sm:h-14 sm:w-14 lg:h-16 lg:w-16">
               <Image
                 src="/logo.png"
                 alt="Mood Premium Peanut Butter Logo"
@@ -213,7 +213,7 @@ export default function MoodWorldClassStore() {
               />
             </div>
             <div className="leading-tight">
-              <div className="text-2xl font-archivo-black uppercase tracking-[0.2em] text-[#16a34a] sm:text-4xl lg:text-5xl">Mood</div>
+              <div className="text-lg font-archivo-black uppercase tracking-[0.15em] text-[#16a34a] sm:text-2xl md:text-4xl lg:text-5xl">Mood</div>
               <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
             </div>
           </a>
@@ -234,7 +234,7 @@ export default function MoodWorldClassStore() {
           </nav>
 
           {/* Actions — far left (last child in RTL flex) */}
-          <div className="flex items-center gap-2 lg:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
             <div className="hidden items-center gap-1 lg:flex">
               {socialLinks.map((social) =>
                 social.name === "Email" ? (
@@ -268,11 +268,11 @@ export default function MoodWorldClassStore() {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="relative inline-flex h-11 items-center gap-2 rounded-full border border-[#edd1b6] bg-white/90 px-4 text-sm font-black text-[#5f3b1f] transition hover:border-[#d2a57b]"
+              className="relative inline-flex h-9 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-full border border-[#edd1b6] bg-white/90 px-2.5 sm:px-4 text-sm font-black text-[#5f3b1f] transition hover:border-[#d2a57b]"
               aria-label={isArabic ? "افتح السلة" : "Open cart"}
             >
               <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">{isArabic ? "السلة" : "Cart"}</span>
+              <span className="hidden md:inline">{isArabic ? "السلة" : "Cart"}</span>
               {cartCount > 0 && (
                 <span className="absolute -start-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#15803d] px-1.5 text-[10px] font-black text-white">
                   {cartCount}
@@ -287,7 +287,7 @@ export default function MoodWorldClassStore() {
             <button
               type="button"
               onClick={() => setMobileMenu((value) => !value)}
-              className="rounded-full border border-[#edd1b6] bg-white/90 p-2 text-[#5f3b1f] transition xl:hidden"
+              className="rounded-full border border-[#edd1b6] bg-white/90 p-1.5 sm:p-2 text-[#5f3b1f] transition xl:hidden"
               aria-label={isArabic ? "فتح القائمة" : "Toggle menu"}
             >
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -345,17 +345,17 @@ export default function MoodWorldClassStore() {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-3 rounded-full border border-[#e7c9a8] bg-[#fff4e6]/80 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#9b5a1a] shadow-sm shadow-[#d1ba9d]/20">
                 <Sparkles className="h-4 w-4 text-[#9b5a1a]" />
-                {isArabic ? "تجربة براند عالمية" : "A world-class brand experience"}
+                {isArabic ? " زبدة موود " : "Mood Peanut Butter"}
               </div>
 
               <div className="space-y-5">
-                <h1 className="text-3xl font-black leading-tight tracking-[-0.05em] text-[#2d170d] sm:text-5xl lg:text-7xl">
-                  {isArabic ? "زبدة فول سوداني بروح فاخرة" : "Premium peanut butter for modern shelves."}
+                <h1 className="text-3xl font-black leading-tight tracking-[-0.05em] text-[#2d170d] sm:text-4xl lg:text-5xl">
+                  {isArabic ? "أفضل زبدة فول سوداني في مصر بجودة عالية وطعم مميز " : "The Best Peanut Butter in Egypt with High Quality and Exceptional Taste."}
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-[#5f4330] sm:text-xl">
                   {isArabic
-                    ? "تجربة تصميم متكاملة تصنع انطباعًا قويًا، تبني ثقة، وتجعل العلامة التجارية تبدو عالمية وفخمة."
-                    : "A refined shopping experience that builds trust, boosts conversion, and positions Mood as a premium international brand."}
+                    ? " اكتشف زبدة الفول السوداني بأنواعها (كريمي، كرانشي، دايت) مع شوكولاتة بالبندق بطعم غني. منتجات موود مثالية للدايت، الجيم، والوجبات الصحية اليومية مع توصيل سريع لجميع أنحاء مصر."
+                    : "Discover peanut butter in all its varieties (creamy, crunchy, and diet) along with rich hazelnut chocolate. Mood products are perfect for dieting, fitness, and healthy everyday meals, with fast delivery across Egypt."}
                 </p>
               </div>
 
@@ -364,13 +364,13 @@ export default function MoodWorldClassStore() {
                   href="#products"
                   className="inline-flex items-center gap-2 rounded-full bg-[#15803d] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_20px_45px_rgba(154,92,36,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7f4d1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15803d]/40"
                 >
-                  {isArabic ? "تسوق المجموعات" : "Explore the collection"}
+                  {isArabic ? "تسوق المنتجات" : " Shop Products"}
                   <BackArrow className="h-4 w-4 rtl-flip" />
                 </a>
-                <button className="inline-flex items-center gap-2 rounded-full border border-[#e5c8a5] bg-white/90 px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-[#5f3b1f] transition duration-300 hover:border-[#d1a570] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15803d]/40">
+                <Link href="/blogs" className="inline-flex items-center gap-2 rounded-full border border-[#e5c8a5] bg-white/90 px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-[#5f3b1f] transition duration-300 hover:border-[#d1a570] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15803d]/40">
                   <Play className="h-4 w-4" />
-                  {isArabic ? "اكتشف البراند" : "Discover Mood"}
-                </button>
+                  {isArabic ? " اكتشف موود" : "Discover Mood"}
+                </Link>
               </div>
 
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -423,7 +423,7 @@ export default function MoodWorldClassStore() {
                     </div>
                     <div className="relative aspect-[16/9] w-full">
                       <Image
-                        src="/products/crunchy.jfif"
+                        src="/products/crunchy.png"
                         alt={isArabic ? "زبدة فول سوداني كرنشي من موود" : "Mood crunchy peanut butter jar - premium natural"}
                         fill
                         sizes="(max-width: 768px) 90vw, 60vw"
@@ -437,15 +437,15 @@ export default function MoodWorldClassStore() {
                     <div className="rounded-[2rem] bg-gradient-to-r from-[#16a34a] to-[#22c55e] p-6 text-white shadow-xl">
                       <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.24em] text-[#f6d29b]">
                         <Globe2 className="h-4 w-4" />
-                        {isArabic ? "تصميم عالمي" : "International appeal"}
+                        {isArabic ? " طعم عالمي " : " World-class taste"}
                       </div>
                       <div className="mt-5 text-3xl font-black leading-tight">
-                        {isArabic ? "هوية تُشعر بها" : "A brand you feel."}
+                        {isArabic ? " نكهات غنية، وتجربة مميزة تجعلك تثق في كل منتج من موود." : "Rich flavors, and a distinctive experience that makes you trust every Mood product."}
                       </div>
                       <p className="mt-4 text-sm leading-7 text-white/80">
                         {isArabic
-                          ? "تجربة مرئية راقية، تدرجات دافئة، وتفاصيل تقود إلى الشراء."
-                          : "Elegant visuals, refined details, and a look that inspires confidence."}
+                          ? " مذاق غني، مكونات طبيعية، ومنتجات مثالية للجيم والدايت مع توصيل سريع."
+                          : "Rich taste, natural ingredients, and products ideal for fitness and dieting, with fast delivery across Egypt."}
                       </p>
                     </div>
 
@@ -592,20 +592,20 @@ export default function MoodWorldClassStore() {
             <div className="grid gap-5 sm:grid-cols-2">
               {[
                 [
-                  isArabic ? "واجهة سينمائية" : "Cinematic hero",
-                  isArabic ? "تركيز أكبر على المنتج والتفاصيل." : "Stronger product emphasis and premium detail.",
+                  isArabic ? " منتجات عالمية" : "Global products",
+                  isArabic ? "تركيز أكبر على جودة المنتج والتغليف." : "Stronger product emphasis and premium detail.",
                 ],
                 [
-                  isArabic ? "تصفح مرن" : "Clear browsing",
-                  isArabic ? "تنسيق متوازن وسهل القراءة." : "Balanced layout and effortless readability.",
+                  isArabic ? " من الطبيعة" : "Natural products",
+                  isArabic ? " منتجات طبيعية وصحية." : "Natural, wholesome products that feel good to eat.",
                 ],
                 [
-                  isArabic ? "ثقة أعلى" : "More trust",
+                  isArabic ? "ثقة فى منتجاتنا" : "More trust",
                   isArabic ? "مؤشرات ثقة جذابة ومصداقية." : "Trust cues that feel authentic and elevated.",
                 ],
                 [
-                  isArabic ? "هوية عالمية" : "Global appeal",
-                  isArabic ? "ألوان دافئة وأسلوب محترف عالمي." : "Warm palette and elegant international style.",
+                  isArabic ? " توصيل سريع لأى مكان" : " Fast delivery anywhere",
+                  isArabic ? "داخل وخارج جمهورية مصر العربية." : "Inside and outside the Arab Republic of Egypt.",
                 ],
               ].map(([title, description]) => (
                 <div key={title as string} className="rounded-[2rem] border border-[#eed7be] bg-white/90 p-6 shadow-sm">
@@ -631,7 +631,7 @@ export default function MoodWorldClassStore() {
                 </h2>
 
                 <div className="mt-10 rounded-[2rem] bg-[#f8efe3] p-8 shadow-sm">
-                  <div className="flex items-center gap-2 text-[#d18f56]">
+                  <div className="flex items-center gap-2 text-[#f5b014]">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star key={star} className="h-5 w-5 fill-current" />
                     ))}
@@ -653,8 +653,8 @@ export default function MoodWorldClassStore() {
                     onClick={() => setActiveTestimonial(index)}
                     className={`rounded-[1.8rem] border p-5 text-left transition ${
                       index === activeTestimonial
-                        ? "border-[#d4b48c] bg-[#2b170d] text-white shadow-lg"
-                        : "border-[#f0dfc7] bg-white text-[#5f3b1f] hover:border-[#d4b48c]"
+                        ? "border-[#15803d] bg-[#15803d] text-white shadow-lg"
+                        : "border-[#f0dfc7] bg-white text-[#5f3b1f] hover:border-[#15803d]/50"
                     }`}
                   >
                     <div className="font-black">{item.name}</div>
@@ -721,7 +721,7 @@ export default function MoodWorldClassStore() {
       </main>
 
       <footer id="contact" className="mx-auto max-w-7xl px-6 pb-16 lg:px-10">
-        <div className="grid gap-8 rounded-[2.4rem] border border-[#f0dfc7] bg-white/85 p-8 shadow-sm md:grid-cols-3">
+        <div className="grid gap-8 rounded-[2.4rem] border border-[#f0dfc7] bg-white/85 p-8 shadow-sm md:grid-cols-2">
           <div>
             <div className="text-3xl font-archivo-black uppercase tracking-[0.2em] text-[#15803d]">Mood</div>
             <div className="mt-2 text-sm font-black uppercase tracking-[0.2em] text-[#5f3b1f]">Premium Peanut Butter</div>
@@ -759,20 +759,32 @@ export default function MoodWorldClassStore() {
           </div>
           <div>
             <div className="text-lg font-black text-[#2d170d]">{isArabic ? "خريطة الموقع" : "Site map"}</div>
-            <div className="mt-4 space-y-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#6f4d34]">
-              {navLinks.slice(0, 4).map(([_, label]) => (
-                <div key={label.en}>{isArabic ? label.ar : label.en}</div>
-              ))}
-            </div>
+            <nav className="mt-4 space-y-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#6f4d34]">
+              {navLinks.map(([href, label]) =>
+                href === "home" ? (
+                  <a key={label.en} href="#home" className="block transition hover:text-[#15803d]">
+                    {isArabic ? label.ar : label.en}
+                  </a>
+                ) : href === "wholesale" ? (
+                  <a key={label.en} href="#wholesale" className="block transition hover:text-[#15803d]">
+                    {isArabic ? label.ar : label.en}
+                  </a>
+                ) : (
+                  <Link key={label.en} href={`/${href}`} className="block transition hover:text-[#15803d]">
+                    {isArabic ? label.ar : label.en}
+                  </Link>
+                )
+              )}
+            </nav>
           </div>
-          <div>
-            <div className="text-lg font-black text-[#2d170d]">{isArabic ? "الخطوة التالية" : "Next step"}</div>
-            <p className="mt-4 leading-7 text-[#6f4d34]">
-              {isArabic
-                ? "أضف السلة، الدفع، وصقل التفاصيل لاحقًا لموقع متجر كامل."
-                : "This version includes cart and checkout flow, ready to evolve into a complete premium store."}
-            </p>
-          </div>
+        </div>
+        <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-2xl border border-[#f0dfc7] bg-white/85 px-8 py-4 text-sm text-[#6f4d34] sm:flex-row">
+          <p className="font-semibold">
+            {isArabic ? "© 2026 Mood. جميع الحقوق محفوظة." : "© 2026 Mood. All rights reserved."}
+          </p>
+          <Link href="/privacy" className="font-semibold transition hover:text-[#15803d]">
+            {isArabic ? "سياسة الخصوصية" : "Privacy Policy"}
+          </Link>
         </div>
       </footer>
     </div>

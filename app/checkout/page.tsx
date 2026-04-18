@@ -111,7 +111,7 @@ export default function CheckoutPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#f2f7f4] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#f2f7f4] flex items-center justify-center px-4 sm:px-6 overflow-x-hidden">
         <div className="text-center">
           <ShoppingBag className="h-16 w-16 mx-auto text-[#15803d] mb-4" />
           <h1 className="text-2xl font-black text-[#2b170d] mb-2">
@@ -133,10 +133,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f7f4]">
+    <div className="min-h-screen bg-[#f2f7f4] overflow-x-hidden">
       {/* Header */}
       <header className="border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm">
-        <div className="mx-auto max-w-7xl px-6 py-4 lg:px-10">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-10">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
               <div className="relative h-12 w-12 overflow-hidden">
@@ -156,7 +156,7 @@ export default function CheckoutPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10 lg:px-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f3b1f] hover:text-[#15803d] transition mb-8"
@@ -170,7 +170,7 @@ export default function CheckoutPage() {
           <div className="order-2 lg:order-1">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Customer Information */}
-              <div className="rounded-3xl border border-[#edd1b6] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#edd1b6] bg-white p-4 sm:p-6 shadow-sm">
                 <h2 className="text-lg font-black text-[#2b170d] mb-5">
                   {t("checkout.customerInfo")}
                 </h2>
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Payment Method */}
-              <div className="rounded-3xl border border-[#edd1b6] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#edd1b6] bg-white p-4 sm:p-6 shadow-sm">
                 <h2 className="text-lg font-black text-[#2b170d] mb-5">
                   {t("checkout.paymentMethod")}
                 </h2>
@@ -334,7 +334,7 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   {/* Cash on Delivery */}
                   <label
-                    className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition ${
+                    className={`flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 cursor-pointer transition ${
                       paymentMethod === "cod"
                         ? "border-[#15803d] bg-[#15803d]/5"
                         : "border-[#edd1b6] hover:border-[#d2a57b]"
@@ -372,7 +372,7 @@ export default function CheckoutPage() {
 
                   {/* Paymob Card Payment */}
                   <label
-                    className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition ${
+                    className={`flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 cursor-pointer transition ${
                       paymentMethod === "paymob"
                         ? "border-[#15803d] bg-[#15803d]/5"
                         : "border-[#edd1b6] hover:border-[#d2a57b]"
@@ -410,7 +410,7 @@ export default function CheckoutPage() {
 
                   {/* Bank Transfer */}
                   <label
-                    className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition ${
+                    className={`flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 cursor-pointer transition ${
                       paymentMethod === "bank_transfer"
                         ? "border-[#15803d] bg-[#15803d]/5"
                         : "border-[#edd1b6] hover:border-[#d2a57b]"
@@ -448,11 +448,11 @@ export default function CheckoutPage() {
 
                   {/* Bank Details Panel */}
                   {paymentMethod === "bank_transfer" && (
-                    <div className="rounded-xl border-2 border-[#ca8a04]/20 bg-[#fefce8] p-4 mt-1">
+                    <div className="rounded-xl border-2 border-[#ca8a04]/20 bg-[#fefce8] p-3 sm:p-4 mt-1">
                       <h3 className="font-bold text-[#854d0e] mb-3 text-sm">
                         {t("checkout.bankDetails")}
                       </h3>
-                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5">
+                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5 overflow-x-auto">
                         <p><strong className="text-[#854d0e]">{t("checkout.bankName")}:</strong> QNB - Qatar National Bank</p>
                         <p><strong className="text-[#854d0e]">{t("checkout.accountHolder")}:</strong> MOAMEN ABDALLAH ELIWA</p>
                         <p><strong className="text-[#854d0e]">{t("checkout.iban")}:</strong> EG120037002708181020791449735</p>
@@ -495,7 +495,7 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="order-1 lg:order-2">
-            <div className="rounded-3xl border border-[#edd1b6] bg-white p-6 shadow-sm sticky top-24">
+            <div className="rounded-3xl border border-[#edd1b6] bg-white p-4 sm:p-6 shadow-sm sticky top-24">
               <h2 className="text-lg font-black text-[#2b170d] mb-5">
                 {t("checkout.orderSummary")}
               </h2>
