@@ -81,6 +81,7 @@ export async function createPaymobIntention(opts: {
 
   const res = await fetch("https://accept.paymob.com/v1/intention/", {
     method: "POST",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       Authorization: secretKey,
@@ -109,6 +110,7 @@ async function legacyAuth(): Promise<string> {
   const apiKey = getEnv("PAYMOB_API_KEY");
   const res = await fetch("https://accept.paymob.com/api/auth/tokens", {
     method: "POST",
+    cache: "no-store",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ api_key: apiKey }),
   });
@@ -126,6 +128,7 @@ async function legacyCreateOrder(
 ): Promise<number> {
   const res = await fetch("https://accept.paymob.com/api/ecommerce/orders", {
     method: "POST",
+    cache: "no-store",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       auth_token: token,
@@ -157,6 +160,7 @@ async function legacyPaymentKey(
     "https://accept.paymob.com/api/acceptance/payment_keys",
     {
       method: "POST",
+      cache: "no-store",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         auth_token: token,

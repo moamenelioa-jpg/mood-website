@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Payment Cancelled – تم إلغاء الدفع",
   description: "Your payment was cancelled. You can try again or return to the store.",

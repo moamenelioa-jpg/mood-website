@@ -18,10 +18,11 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 
-  // Performance headers
+  // Performance & caching headers
   async headers() {
     return [
       {
+        // Security headers for all routes
         source: "/(.*)",
         headers: [
           {
@@ -43,7 +44,28 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Cache static assets aggressively
+        // HTML pages — always revalidate with the server so new deploys
+        // are picked up immediately. The browser may cache but must check
+        // with the server before using the cached version.
+        source: "/:path*",
+        has: [{ type: "header", key: "accept", value: ".*text/html.*" }],
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
+        ],
+      },
+      {
+        // Cache static assets aggressively (these have content hashes in filenames)
         source: "/(.*)\\.(jpg|jpeg|png|gif|svg|ico|webp|avif|woff|woff2)",
         headers: [
           {

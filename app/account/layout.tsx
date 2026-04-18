@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "My Account – حسابي",
   description: "Manage your Mood account, view profile information and settings. إدارة حسابك في موود",
