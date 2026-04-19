@@ -8,11 +8,26 @@ import {
   useCallback,
   ReactNode,
 } from "react";
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  updateProfile,
+  sendEmailVerification,
+  setPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
+import { auth } from "@/app/lib/firebase";
+import { ensureUserProfile } from "@/app/lib/user-profiles";
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  emailVerified?: boolean;
 }
 
 interface AuthContextType {
@@ -22,22 +37,16 @@ interface AuthContextType {
   openLogin: () => void;
   openSignup: () => void;
   closeAuthModal: () => void;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
+  signInWithGoogle: () => Promise<boolean>;
+  resendVerification: () => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USER_KEY = "mood_user";
-const ACCOUNTS_KEY = "mood_accounts";
-
-interface StoredAccount {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-}
+// No local fake accounts; we use Firebase Auth only.
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -45,36 +54,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("login");
   const [mounted, setMounted] = useState(false);
 
+  // Initialize persistence and subscribe to auth state
   useEffect(() => {
-    const saved = localStorage.getItem(USER_KEY);
-    if (saved) {
+    let unsub = () => {};
+    (async () => {
       try {
-        setUser(JSON.parse(saved));
+        await setPersistence(auth, browserLocalPersistence);
       } catch {
-        localStorage.removeItem(USER_KEY);
+        // ignore; defaults apply
       }
-    }
-    setMounted(true);
+      unsub = onAuthStateChanged(auth, async (fbUser) => {
+        if (fbUser) {
+          const u: User = {
+            id: fbUser.uid,
+            name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
+            email: fbUser.email || "",
+            emailVerified: fbUser.emailVerified,
+          };
+          setUser(u);
+          try { await ensureUserProfile(fbUser); } catch {}
+        } else {
+          setUser(null);
+        }
+        setMounted(true);
+      });
+    })();
+    return () => unsub();
   }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      if (user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-      } else {
-        localStorage.removeItem(USER_KEY);
-      }
-    }
-  }, [user, mounted]);
-
-  const getAccounts = (): StoredAccount[] => {
-    try {
-      const raw = localStorage.getItem(ACCOUNTS_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  };
 
   const openLogin = useCallback(() => {
     setAuthModalMode("login");
@@ -88,41 +94,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const closeAuthModal = useCallback(() => setIsAuthModalOpen(false), []);
 
-  const login = useCallback((email: string, password: string): boolean => {
-    const accounts = getAccounts();
-    const account = accounts.find(
-      (a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password
-    );
-    if (account) {
-      const u: User = { id: account.id, name: account.name, email: account.email };
-      setUser(u);
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       setIsAuthModalOpen(false);
       return true;
-    }
-    return false;
-  }, []);
-
-  const signup = useCallback((name: string, email: string, password: string): boolean => {
-    const accounts = getAccounts();
-    if (accounts.some((a) => a.email.toLowerCase() === email.toLowerCase())) {
+    } catch {
       return false;
     }
-    const newAccount: StoredAccount = {
-      id: crypto.randomUUID(),
-      name,
-      email,
-      password,
-    };
-    accounts.push(newAccount);
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    const u: User = { id: newAccount.id, name: newAccount.name, email: newAccount.email };
-    setUser(u);
-    setIsAuthModalOpen(false);
-    return true;
+  }, []);
+
+  const signup = useCallback(async (name: string, email: string, password: string): Promise<boolean> => {
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      if (name) {
+        await updateProfile(cred.user, { displayName: name });
+      }
+      // Create Firestore profile NOW, after displayName is set, so fullName is correct.
+      // The onAuthStateChanged call will just update it again, which is harmless.
+      try { await ensureUserProfile(cred.user); } catch {}
+      try {
+        await sendEmailVerification(cred.user);
+      } catch {}
+      setIsAuthModalOpen(false);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const signInWithGoogle = useCallback(async (): Promise<boolean> => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      setIsAuthModalOpen(false);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const resendVerification = useCallback(async (): Promise<boolean> => {
+    try {
+      if (auth.currentUser && !auth.currentUser.emailVerified) {
+        await sendEmailVerification(auth.currentUser);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   }, []);
 
   const logout = useCallback(() => {
-    setUser(null);
+    signOut(auth).catch(() => {});
   }, []);
 
   return (
@@ -136,6 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         closeAuthModal,
         login,
         signup,
+        signInWithGoogle,
+        resendVerification,
         logout,
       }}
     >

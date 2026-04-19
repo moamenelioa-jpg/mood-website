@@ -22,6 +22,11 @@ import {
   ShoppingBag,
   Clock,
   BadgeDollarSign,
+  Archive,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  History,
 } from "lucide-react";
 import { db } from "@/app/lib/firebase";
 import { collection, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
@@ -60,6 +65,8 @@ interface Order {
   receiptUploadedAt?: string;
   paymobOrderId?: string;
   paymobTransactionId?: string;
+  archived?: boolean;
+  statusHistory?: Array<{ status: string; changedAt: string; changedBy: string }>;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -86,6 +93,7 @@ const OS_LABELS: Record<string, string> = {
   processing: "قيد المعالجة",
   shipped: "تم الشحن",
   delivered: "تم التسليم",
+  completed: "مكتمل",
   cancelled: "ملغى",
 };
 
@@ -103,10 +111,11 @@ const OS_COLORS: Record<string, string> = {
   processing: "bg-indigo-50 text-indigo-800 border-indigo-200",
   shipped: "bg-purple-50 text-purple-800 border-purple-200",
   delivered: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  completed: "bg-teal-50 text-teal-800 border-teal-200",
   cancelled: "bg-red-50 text-red-700 border-red-200",
 };
 
-const STATUS_FLOW = ["pending", "confirmed", "processing", "shipped", "delivered"] as const;
+const STATUS_FLOW = ["pending", "confirmed", "processing", "shipped", "delivered", "completed"] as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -272,6 +281,8 @@ function OrderModal({
   onApprove,
   onReject,
   onStatusChange,
+  onArchive,
+  onDelete,
   actionLoading,
 }: {
   order: Order;
@@ -279,6 +290,8 @@ function OrderModal({
   onApprove: (o: Order) => Promise<void>;
   onReject: (o: Order) => Promise<void>;
   onStatusChange: (o: Order, s: string) => Promise<void>;
+  onArchive: (o: Order, archived: boolean) => Promise<void>;
+  onDelete: (o: Order) => void;
   actionLoading: string | null;
 }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -470,7 +483,7 @@ function OrderModal({
           </section>
 
           {/* Order Status Stepper */}
-          {order.orderStatus !== "cancelled" && (
+          {!["cancelled", "completed"].includes(order.orderStatus) && (
             <section>
               <h3 className="mb-3 text-xs font-bold text-[#5f3b1f] uppercase tracking-wider">حالة الطلب</h3>
               <div className="rounded-2xl border border-[#edd1b6] p-4 space-y-4">
@@ -527,9 +540,10 @@ function OrderModal({
 
                 {order.orderStatus === "delivered" && (
                   <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm font-semibold text-emerald-800">
-                    <CheckCircle2 className="h-4 w-4" />تم تسليم الطلب بنجاح
+                    <CheckCircle2 className="h-4 w-4" />تم تسليم الطلب — يمكنك تحديده كـ "مكتمل"
                   </div>
                 )}
+                {/* completed status is not part of the current workflow */}
               </div>
             </section>
           )}
@@ -539,6 +553,65 @@ function OrderModal({
               <XCircle className="h-4 w-4" />هذا الطلب ملغى
             </div>
           )}
+
+          {/* completed status is not used */}
+
+          {/* Status History */}
+          {(order.statusHistory?.length ?? 0) > 0 && (
+            <section>
+              <h3 className="mb-3 text-xs font-bold text-[#5f3b1f] uppercase tracking-wider flex items-center gap-2">
+                <History className="h-3.5 w-3.5" />سجل الحالات
+              </h3>
+              <div className="rounded-2xl border border-[#edd1b6] divide-y divide-[#edd1b6]/60 overflow-hidden">
+                {[...(order.statusHistory ?? [])].reverse().map((h, i) => (
+                  <div key={i} className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-[#f9f5f0]/50">
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${OS_COLORS[h.status] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                      {OS_LABELS[h.status] ?? h.status}
+                    </span>
+                    <div className="text-right">
+                      <p className="text-xs text-[#a08672]">{h.changedBy}</p>
+                      <p className="text-xs text-[#a08672]">{new Date(h.changedAt).toLocaleString("ar-EG")}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Archive & Delete */}
+          <section>
+            <h3 className="mb-3 text-xs font-bold text-[#5f3b1f] uppercase tracking-wider">إجراءات أخرى</h3>
+            <div className="space-y-2">
+              {!order.archived ? (
+                <button
+                  onClick={() => onArchive(order, true)}
+                  disabled={!!actionLoading}
+                  className="flex w-full items-center gap-3 rounded-xl border border-[#edd1b6] bg-white px-4 py-3 text-sm font-medium text-[#5f3b1f] hover:bg-[#f9f5f0] transition disabled:opacity-50"
+                >
+                  {actionLoading === `archive-${order.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4 text-[#a08672]" />}
+                  أرشفة الطلب
+                </button>
+              ) : (
+                <button
+                  onClick={() => onArchive(order, false)}
+                  disabled={!!actionLoading}
+                  className="flex w-full items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
+                >
+                  {actionLoading === `archive-${order.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+                  إلغاء الأرشفة
+                </button>
+              )}
+              {(["completed", "cancelled", "delivered"].includes(order.orderStatus) || order.archived) && (
+                <button
+                  onClick={() => onDelete(order)}
+                  className="flex w-full items-center gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  حذف الطلب نهائياً
+                </button>
+              )}
+            </div>
+          </section>
 
           {/* WhatsApp Notifications */}
           <section>
@@ -598,7 +671,11 @@ export default function AdminOrdersPage() {
   const [pmFilter, setPmFilter] = useState("all");
   const [psFilter, setPsFilter] = useState("all");
   const [osFilter, setOsFilter] = useState("all");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [showArchived, setShowArchived] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // ── Real-time Firestore listener ──────────────────────────────────────────
   // IMPORTANT: only subscribe AFTER the admin token with the `admin` custom
@@ -687,21 +764,58 @@ export default function AdminOrdersPage() {
     } finally { setActionLoading(null); }
   }, [callAPI]);
 
-  // ── Filtering ─────────────────────────────────────────────────────────────
-  const filtered = useMemo(() => orders.filter((o) => {
-    if (search) {
-      const s = search.toLowerCase();
-      if (
-        !o.orderNumber.toLowerCase().includes(s) &&
-        !o.customerName.toLowerCase().includes(s) &&
-        !o.phone.includes(s)
-      ) return false;
-    }
-    if (pmFilter !== "all" && o.paymentMethod !== pmFilter) return false;
-    if (psFilter !== "all" && o.paymentStatus !== psFilter) return false;
-    if (osFilter !== "all" && o.orderStatus !== osFilter) return false;
-    return true;
-  }), [orders, search, pmFilter, psFilter, osFilter]);
+  const handleArchive = useCallback(async (order: Order, archived: boolean) => {
+    setActionLoading(`archive-${order.id}`);
+    try {
+      await callAPI(order.orderNumber, { archived: String(archived) });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "حدث خطأ");
+    } finally { setActionLoading(null); }
+  }, [callAPI]);
+
+  const handleDelete = useCallback(async (order: Order) => {
+    setDeleting(true);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("No auth token");
+      const res = await fetch(`/api/admin/orders/${order.orderNumber}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? "Delete failed");
+      setDeleteTarget(null);
+      setSelectedOrder(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "حدث خطأ");
+    } finally { setDeleting(false); }
+  }, [getToken]);
+
+  // ── Filtering + Sorting ───────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    let result = orders.filter((o) => {
+      // Hide archived orders by default unless explicitly shown
+      if (!showArchived && o.archived) return false;
+      if (showArchived && osFilter === "all" && !o.archived) return false;
+
+      if (search) {
+        const s = search.toLowerCase();
+        if (
+          !o.orderNumber.toLowerCase().includes(s) &&
+          !o.customerName.toLowerCase().includes(s) &&
+          !o.phone.includes(s)
+        ) return false;
+      }
+      if (pmFilter !== "all" && o.paymentMethod !== pmFilter) return false;
+      if (psFilter !== "all" && o.paymentStatus !== psFilter) return false;
+      if (osFilter !== "all" && o.orderStatus !== osFilter) return false;
+      return true;
+    });
+
+    // Firestore returns desc by default; reverse for asc
+    if (sortDir === "asc") result = [...result].reverse();
+    return result;
+  }, [orders, search, pmFilter, psFilter, osFilter, sortDir, showArchived]);
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
@@ -763,6 +877,16 @@ export default function AdminOrdersPage() {
           )}
         </div>
 
+        {/* Sort direction */}
+        <button
+          onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+          className="flex items-center gap-2 rounded-xl border border-[#edd1b6] bg-white px-4 py-2.5 text-sm text-[#5f3b1f] hover:bg-[#f9f5f0] transition"
+          title={sortDir === "desc" ? "الأحدث أولاً" : "الأقدم أولاً"}
+        >
+          {sortDir === "desc" ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          {sortDir === "desc" ? "الأحدث" : "الأقدم"}
+        </button>
+
         <div className="relative">
           <Filter className="absolute top-1/2 -translate-y-1/2 right-3 h-4 w-4 text-[#a08672] pointer-events-none" />
           <select value={pmFilter} onChange={(e) => setPmFilter(e.target.value)} className="appearance-none rounded-xl border border-[#edd1b6] bg-white py-2.5 pr-10 pl-4 text-sm text-[#2b170d] focus:border-[#15803d] focus:outline-none cursor-pointer">
@@ -789,8 +913,22 @@ export default function AdminOrdersPage() {
           <option value="processing">قيد المعالجة</option>
           <option value="shipped">تم الشحن</option>
           <option value="delivered">تم التسليم</option>
+          <option value="completed">مكتمل</option>
           <option value="cancelled">ملغى</option>
         </select>
+
+        {/* Archived toggle */}
+        <button
+          onClick={() => setShowArchived((v) => !v)}
+          className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+            showArchived
+              ? "border-[#5f3b1f] bg-[#2b170d] text-white"
+              : "border-[#edd1b6] bg-white text-[#a08672] hover:text-[#5f3b1f] hover:bg-[#f9f5f0]"
+          }`}
+        >
+          <Archive className="h-4 w-4" />
+          {showArchived ? "عرض المؤرشف" : "الأرشيف"}
+        </button>
 
         {hasFilters && (
           <button onClick={() => { setSearch(""); setPmFilter("all"); setPsFilter("all"); setOsFilter("all"); }} className="flex items-center gap-1.5 rounded-xl border border-[#edd1b6] bg-white px-3 py-2.5 text-sm text-[#a08672] hover:text-[#5f3b1f] hover:bg-[#f9f5f0] transition">
@@ -836,11 +974,14 @@ export default function AdminOrdersPage() {
                 {filtered.map((order) => (
                   <tr
                     key={order.id}
-                    className="hover:bg-[#f9f5f0]/60 transition cursor-pointer group"
+                    className={`hover:bg-[#f9f5f0]/60 transition cursor-pointer group ${order.archived ? "opacity-60" : ""}`}
                     onClick={() => setSelectedOrder(order)}
                   >
                     <td className="px-5 py-3.5">
                       <span className="font-mono text-xs font-semibold text-[#2b170d]">{order.orderNumber}</span>
+                      {order.archived && (
+                        <span className="mr-1.5 inline-flex items-center rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">مؤرشف</span>
+                      )}
                       {order.paymentMethod === "bank_transfer" && order.paymentStatus === "pending_verification" && (
                         <span className="mr-1.5 inline-flex items-center rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-800">يحتاج مراجعة</span>
                       )}
@@ -848,6 +989,7 @@ export default function AdminOrdersPage() {
                     <td className="px-5 py-3.5">
                       <p className="font-semibold text-[#2b170d]">{order.customerName}</p>
                       <p className="text-xs text-[#a08672] font-mono">{order.phone}</p>
+                      {order.email && <p className="text-xs text-[#a08672]">{order.email}</p>}
                     </td>
                     <td className="px-5 py-3.5 text-[#5f3b1f] text-sm">{order.city}</td>
                     <td className="px-5 py-3.5 font-bold text-[#2b170d]">{order.total?.toLocaleString()} ج.م</td>
@@ -862,12 +1004,21 @@ export default function AdminOrdersPage() {
                       {order.createdAt ? formatDate(order.createdAt) : "—"}
                     </td>
                     <td className="px-5 py-3.5">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
-                        className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 rounded-lg border border-[#edd1b6] bg-white px-2.5 py-1.5 text-xs font-medium text-[#5f3b1f] hover:bg-[#f9f5f0]"
-                      >
-                        عرض <ChevronRight className="h-3 w-3 rotate-180" />
-                      </button>
+                      <div className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
+                          className="flex items-center gap-1 rounded-lg border border-[#edd1b6] bg-white px-2.5 py-1.5 text-xs font-medium text-[#5f3b1f] hover:bg-[#f9f5f0]"
+                        >
+                          عرض <ChevronRight className="h-3 w-3 rotate-180" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleArchive(order, !order.archived); }}
+                          title={order.archived ? "إلغاء الأرشفة" : "أرشفة"}
+                          className="rounded-lg border border-[#edd1b6] bg-white p-1.5 text-[#a08672] hover:bg-[#f9f5f0] hover:text-[#5f3b1f]"
+                        >
+                          <Archive className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -885,8 +1036,48 @@ export default function AdminOrdersPage() {
           onApprove={handleApprove}
           onReject={handleReject}
           onStatusChange={handleStatusChange}
+          onArchive={handleArchive}
+          onDelete={(o) => setDeleteTarget(o)}
           actionLoading={actionLoading}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" dir="rtl">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[#edd1b6]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 mb-4">
+              <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <h3 className="font-black text-[#2b170d] text-lg mb-1">حذف الطلب نهائياً</h3>
+            <p className="text-sm text-[#5f3b1f] mb-1">
+              طلب رقم: <span className="font-mono font-bold">{deleteTarget.orderNumber}</span>
+            </p>
+            <p className="text-sm text-[#5f3b1f] mb-2">
+              العميل: <strong>{deleteTarget.customerName}</strong>
+            </p>
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-5 text-sm text-red-700">
+              هذا الإجراء لا يمكن التراجع عنه. سيُحذف الطلب من Firestore نهائياً.
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 rounded-xl border border-[#edd1b6] bg-white px-4 py-2.5 text-sm font-bold text-[#5f3b1f] hover:bg-[#f9f5f0] transition"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => handleDelete(deleteTarget)}
+                disabled={deleting}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 text-white px-4 py-2.5 text-sm font-bold hover:bg-red-700 transition disabled:opacity-60"
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                حذف نهائياً
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

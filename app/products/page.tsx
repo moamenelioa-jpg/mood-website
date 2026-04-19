@@ -8,7 +8,8 @@ import { useLanguage, LanguageSwitcher } from "@/app/lib/language-context";
 import { useCart } from "@/app/lib/cart-context";
 import { useContactForm } from "@/app/lib/contact-form-context";
 import { useAuth } from "@/app/lib/auth-context";
-import { products } from "@/app/lib/products";
+import { useEffect } from "react";
+import type { Product as UIProduct } from "@/app/lib/products";
 
 // Social Media Icons
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -126,6 +127,38 @@ export default function ProductsPage() {
   const { addToCart, cartCount } = useCart();
   const { openContactForm } = useContactForm();
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [items, setItems] = useState<UIProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/products", { cache: "no-store" });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Failed to load products");
+        const mapped: UIProduct[] = (data.products || []).map((p: any, idx: number) => ({
+          id: idx + 1, // stable numeric id for cart compatibility
+          slug: p.slug,
+          nameEn: p.nameEn,
+          nameAr: p.nameAr,
+          subtitleEn: p.subtitleEn || "",
+          subtitleAr: p.subtitleAr || "",
+          size: p.size || "",
+          badgeEn: p.badgeEn || "",
+          badgeAr: p.badgeAr || "",
+          price: Number(p.price) || 0,
+          image: p.mainImage || "/products/crunchy.jfif",
+        }));
+        if (active) setItems(mapped);
+      } catch (e) {
+        // keep items empty on failure
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#f2f7f4] text-[#2b170d]">
@@ -318,7 +351,7 @@ export default function ProductsPage() {
 
         {/* Products Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map((product) => (
+          {(loading ? [] : items).map((product) => (
             <article
               key={product.id}
               className="group overflow-hidden rounded-[2.4rem] border border-[#f0dfc7] bg-white/90 shadow-[0_24px_75px_rgba(82,44,12,0.09)] transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_32px_96px_rgba(82,44,12,0.16)]"

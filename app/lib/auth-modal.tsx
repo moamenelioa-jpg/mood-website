@@ -8,11 +8,14 @@ import { useAuth } from "@/app/lib/auth-context";
 export default function AuthModal() {
   const { isArabic } = useLanguage();
   const {
+    user,
     isAuthModalOpen,
     authModalMode,
     closeAuthModal,
     login,
     signup,
+    signInWithGoogle,
+    resendVerification,
     openLogin,
     openSignup,
   } = useAuth();
@@ -36,19 +39,16 @@ export default function AuthModal() {
     setShowPassword(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    setTimeout(() => {
+    try {
       if (isLogin) {
-        const success = login(email, password);
-        if (!success) {
-          setError(isArabic ? "البريد الإلكتروني أو كلمة المرور غير صحيحة" : "Invalid email or password");
-        } else {
-          resetForm();
-        }
+        const ok = await login(email, password);
+        if (!ok) setError(isArabic ? "البريد الإلكتروني أو كلمة المرور غير صحيحة" : "Invalid email or password");
+        else resetForm();
       } else {
         if (!name.trim()) {
           setError(isArabic ? "الاسم مطلوب" : "Name is required");
@@ -60,15 +60,25 @@ export default function AuthModal() {
           setLoading(false);
           return;
         }
-        const success = signup(name.trim(), email, password);
-        if (!success) {
-          setError(isArabic ? "هذا البريد الإلكتروني مسجل بالفعل" : "This email is already registered");
-        } else {
-          resetForm();
-        }
+        const ok = await signup(name.trim(), email, password);
+        if (!ok) setError(isArabic ? "هذا البريد الإلكتروني مسجل بالفعل أو غير متاح" : "Email already in use or unavailable");
+        else resetForm();
       }
+    } finally {
       setLoading(false);
-    }, 300);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const ok = await signInWithGoogle();
+      if (!ok) setError(isArabic ? "فشل تسجيل الدخول عبر Google" : "Google sign-in failed");
+      else resetForm();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,6 +122,21 @@ export default function AuthModal() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Google sign-in */}
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleGoogle}
+            className="w-full rounded-xl border border-[#e7c9a8] bg-white py-3 text-sm font-bold text-[#2d170d] hover:bg-[#f9f5f0] transition disabled:opacity-60"
+          >
+            {isArabic ? "الدخول عبر Google" : "Continue with Google"}
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#f0e2d0]" />
+            <span className="text-xs text-[#a08672]">{isArabic ? "أو" : "or"}</span>
+            <div className="h-px flex-1 bg-[#f0e2d0]" />
+          </div>
           {!isLogin && (
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-[#5f3b1f]">
@@ -193,6 +218,29 @@ export default function AuthModal() {
             )}
           </button>
         </form>
+
+        {/* Email verification helper */}
+        {user && user.email && user.emailVerified === false && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold">
+                {isArabic ? "حسابك غير مُفعّل. تحقّق من بريدك الإلكتروني." : "Your email is not verified. Please check your inbox."}
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  const ok = await resendVerification();
+                  setLoading(false);
+                  if (!ok) setError(isArabic ? "تعذر إرسال رسالة التفعيل" : "Could not resend verification email");
+                }}
+                className="rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+              >
+                {isArabic ? "إعادة إرسال التفعيل" : "Resend verification"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 text-center text-sm text-[#6a4f37]">
           {isLogin ? (

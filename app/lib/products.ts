@@ -25,7 +25,7 @@ export const products: Product[] = [
     size: "300g",
     badgeEn: "Best Seller",
     badgeAr: "الأكثر مبيعًا",
-    price: 70,
+    price: 79.99,
     image: "/products/crunchy.jpg",
   },
   {
@@ -38,7 +38,7 @@ export const products: Product[] = [
     size: "300g",
     badgeEn: "New",
     badgeAr: "جديد",
-    price: 70,
+    price: 79.99,
     image: "/products/creamy.jpg",
   },
   {
@@ -51,7 +51,7 @@ export const products: Product[] = [
     size: "225g",
     badgeEn: "Trending",
     badgeAr: "رائج",
-    price: 35,
+    price: 33.99,
     image: "/products/chocolate.jpg",
   },
   {
@@ -64,7 +64,7 @@ export const products: Product[] = [
     size: "1kg",
     badgeEn: "Value Pack",
     badgeAr: "عبوة اقتصادية",
-    price: 190,
+    price: 210.99,
     image: "/products/family.jpg",
   },
   {
@@ -77,7 +77,7 @@ export const products: Product[] = [
     size: "300g",
     badgeEn: "Healthy",
     badgeAr: "صحي",
-    price: 70,
+    price: 79.99,
     image: "/products/diet.jpg",
   },
   {
@@ -90,7 +90,7 @@ export const products: Product[] = [
     size: "300g",
     badgeEn: "Premium",
     badgeAr: "فاخر",
-    price: 75,
+    price: 85.99,
     image: "/products/honey.jpg",
   },
   {
@@ -103,7 +103,7 @@ export const products: Product[] = [
     size: "350g",
     badgeEn: "Popular",
     badgeAr: "شائع",
-    price: 55,
+    price: 53.99,
     image: "/products/chocolate-350g.jpg",
   },
   {
@@ -116,7 +116,7 @@ export const products: Product[] = [
     size: "625g",
     badgeEn: "New",
     badgeAr: "جديد",
-    price: 130,
+    price: 142.99,
     image: "/products/diet-620.jpg",
   },
   {
@@ -129,7 +129,7 @@ export const products: Product[] = [
     size: "5kg",
     badgeEn: "Premium",
     badgeAr: "فاخر",
-    price: 540,
+    price: 592.99,
     image: "/products/mood-gallon.jpg",
   },
   {
@@ -142,7 +142,7 @@ export const products: Product[] = [
     size: "50g",
     badgeEn: "Mini",
     badgeAr: "ميني",
-    price: 10,
+    price: 11.99,
     image: "/products/choco50.jpeg",
   },
   {

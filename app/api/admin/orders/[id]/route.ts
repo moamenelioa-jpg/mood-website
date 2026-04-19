@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import {
-  getOrderById,
-  updateOrder,
-  cancelOrder,
-  markOrderPaid,
-} from "@/app/lib/orders";
-import { OrderUpdateInput, OrderStatuses, PaymentStatuses } from "@/app/lib/types";
-import { requireAdmin } from "@/app/lib/admin-auth";
+import { adminDb } from "@/app/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
+import { requireAdmin, VerifiedAdmin } from "@/app/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -14,155 +9,159 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// GET /api/admin/orders/[id] - Get single order
+const ORDERS_COLLECTION = "orders";
+
+const VALID_ORDER_STATUSES = [
+  "pending", "confirmed", "processing", "shipped",
+  "delivered", "completed", "cancelled",
+];
+const VALID_PAYMENT_STATUSES = [
+  "unpaid", "pending", "paid", "failed", "pending_verification",
+];
+
+/**
+ * Resolve an order by Firestore doc ID or by orderNumber.
+ * Returns { ref, data } or null.
+ */
+async function resolveOrder(idOrNumber: string) {
+  // Try Firestore doc ID first (24-char alphanumeric)
+  if (/^[a-zA-Z0-9]{20}$/.test(idOrNumber)) {
+    const ref = adminDb.collection(ORDERS_COLLECTION).doc(idOrNumber);
+    const snap = await ref.get();
+    if (snap.exists) return { ref, data: { id: snap.id, ...snap.data() } };
+  }
+
+  // Fallback: look up by orderNumber (e.g. MOOD-20260418-001)
+  const snapshot = await adminDb
+    .collection(ORDERS_COLLECTION)
+    .where("orderNumber", "==", idOrNumber)
+    .limit(1)
+    .get();
+
+  if (!snapshot.empty) {
+    const doc = snapshot.docs[0];
+    return { ref: doc.ref, data: { id: doc.id, ...doc.data() } };
+  }
+
+  return null;
+}
+
+// GET /api/admin/orders/[id] — Get single order
 export async function GET(req: Request, { params }: RouteParams) {
   const admin = await requireAdmin(req);
   if (admin instanceof Response) return admin;
 
   try {
-
     const { id } = await params;
-    const order = await getOrderById(id);
-
-    if (!order) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
+    const resolved = await resolveOrder(id);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
-
-    return NextResponse.json({ success: true, order });
+    return NextResponse.json({ success: true, order: resolved.data });
   } catch (error) {
-    console.error("Get order error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch order" },
-      { status: 500 }
-    );
+    console.error("[Admin Orders GET]", error);
+    return NextResponse.json({ success: false, error: "Failed to fetch order" }, { status: 500 });
   }
 }
 
-// PATCH /api/admin/orders/[id] - Update order
+// PATCH /api/admin/orders/[id] — Update order (status, payment, archive, notes, tracking)
 export async function PATCH(req: Request, { params }: RouteParams) {
-  const admin = await requireAdmin(req);
-  if (admin instanceof Response) return admin;
+  const adminUser = await requireAdmin(req);
+  if (adminUser instanceof Response) return adminUser;
 
   try {
     const { id } = await params;
     const body = await req.json();
 
-    // Validate order exists
-    const existingOrder = await getOrderById(id);
-    if (!existingOrder) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
+    const resolved = await resolveOrder(id);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
 
-    // Handle special actions
-    if (body.action === "cancel") {
-      const order = await cancelOrder(id);
-      return NextResponse.json({ success: true, order, message: "Order cancelled" });
-    }
+    const updates: Record<string, unknown> = {
+      updatedAt: FieldValue.serverTimestamp(),
+    };
 
-    if (body.action === "mark_paid") {
-      const order = await markOrderPaid(id);
-      return NextResponse.json({ success: true, order, message: "Order marked as paid" });
-    }
-
-    // Validate update fields
-    const updates: OrderUpdateInput = {};
-
-    if (body.orderStatus) {
-      const validStatuses = Object.values(OrderStatuses);
-      if (!validStatuses.includes(body.orderStatus)) {
+    // ── Order status ───────────────────────────────────────────────────
+    if (body.orderStatus !== undefined) {
+      if (!VALID_ORDER_STATUSES.includes(body.orderStatus)) {
         return NextResponse.json(
-          { success: false, error: `Invalid order status. Valid: ${validStatuses.join(", ")}` },
+          { success: false, error: `Invalid order status. Valid: ${VALID_ORDER_STATUSES.join(", ")}` },
           { status: 400 }
         );
       }
       updates.orderStatus = body.orderStatus;
+
+      // Append to status history log
+      updates.statusHistory = FieldValue.arrayUnion({
+        status: body.orderStatus,
+        changedAt: new Date().toISOString(),
+        changedBy: (adminUser as VerifiedAdmin).email ?? "admin",
+      });
     }
 
-    if (body.paymentStatus) {
-      const validStatuses = Object.values(PaymentStatuses);
-      if (!validStatuses.includes(body.paymentStatus)) {
+    // ── Payment status ─────────────────────────────────────────────────
+    if (body.paymentStatus !== undefined) {
+      if (!VALID_PAYMENT_STATUSES.includes(body.paymentStatus)) {
         return NextResponse.json(
-          { success: false, error: `Invalid payment status. Valid: ${validStatuses.join(", ")}` },
+          { success: false, error: `Invalid payment status. Valid: ${VALID_PAYMENT_STATUSES.join(", ")}` },
           { status: 400 }
         );
       }
       updates.paymentStatus = body.paymentStatus;
     }
 
-    if (body.shippingCompany !== undefined) {
-      updates.shippingCompany = body.shippingCompany;
+    // ── Archive flag ───────────────────────────────────────────────────
+    if (body.archived !== undefined) {
+      updates.archived = Boolean(body.archived);
     }
 
-    if (body.trackingNumber !== undefined) {
-      updates.trackingNumber = body.trackingNumber;
+    // ── Free-text / shipping fields ────────────────────────────────────
+    if (body.notes !== undefined) updates.notes = body.notes;
+    if (body.trackingNumber !== undefined) updates.trackingNumber = body.trackingNumber;
+    if (body.shippingCompany !== undefined) updates.shippingCompany = body.shippingCompany;
+
+    if (Object.keys(updates).length <= 1) {
+      // Only updatedAt — nothing meaningful to update
+      return NextResponse.json({ success: false, error: "No valid fields to update" }, { status: 400 });
     }
 
-    if (body.shippingStatus !== undefined) {
-      updates.shippingStatus = body.shippingStatus;
-    }
-
-    if (body.notes !== undefined) {
-      updates.notes = body.notes;
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No valid fields to update" },
-        { status: 400 }
-      );
-    }
-
-    const order = await updateOrder(id, updates);
-
-    return NextResponse.json({
-      success: true,
-      order,
-      message: "Order updated successfully",
-    });
+    await resolved.ref.update(updates);
+    return NextResponse.json({ success: true, message: "Order updated" });
   } catch (error) {
-    console.error("Update order error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update order" },
-      { status: 500 }
-    );
+    console.error("[Admin Orders PATCH]", error);
+    return NextResponse.json({ success: false, error: "Failed to update order" }, { status: 500 });
   }
 }
 
-// DELETE /api/admin/orders/[id] - Cancel order (soft delete)
+// DELETE /api/admin/orders/[id] — Hard delete (only completed / cancelled / archived orders)
 export async function DELETE(req: Request, { params }: RouteParams) {
   const admin = await requireAdmin(req);
   if (admin instanceof Response) return admin;
 
   try {
     const { id } = await params;
+    const resolved = await resolveOrder(id);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+    }
 
-    const existingOrder = await getOrderById(id);
-    if (!existingOrder) {
+    const order = resolved.data as Record<string, unknown>;
+    const safeStatuses = ["completed", "cancelled", "delivered"];
+    const isSafe =
+      safeStatuses.includes(order.orderStatus as string) || Boolean(order.archived);
+
+    if (!isSafe) {
       return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
+        { success: false, error: "يمكن حذف الطلبات المكتملة أو الملغاة أو المؤرشفة فقط" },
+        { status: 400 }
       );
     }
 
-    // Soft delete by cancelling
-    const order = await cancelOrder(id);
-
-    return NextResponse.json({
-      success: true,
-      order,
-      message: "Order cancelled successfully",
-    });
+    await resolved.ref.delete();
+    return NextResponse.json({ success: true, message: "Order deleted permanently" });
   } catch (error) {
-    console.error("Delete order error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to cancel order" },
-      { status: 500 }
-    );
+    console.error("[Admin Orders DELETE]", error);
+    return NextResponse.json({ success: false, error: "Failed to delete order" }, { status: 500 });
   }
 }

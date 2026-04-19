@@ -26,7 +26,8 @@ import { useLanguage, LanguageSwitcher } from "@/app/lib/language-context";
 import { useCart } from "@/app/lib/cart-context";
 import { useContactForm } from "@/app/lib/contact-form-context";
 import { useAuth } from "@/app/lib/auth-context";
-import { featuredProducts } from "@/app/lib/products";
+import { useEffect } from "react";
+import type { Product as UIProduct } from "@/app/lib/products";
 
 // Social Media Icons
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -177,6 +178,40 @@ export default function MoodWorldClassStore() {
   const { openContactForm } = useContactForm();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [featured, setFeatured] = useState<UIProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/products", { cache: "no-store" });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Failed to load products");
+        const mapped: UIProduct[] = (data.products || [])
+          .slice(0, 4)
+          .map((p: any, idx: number) => ({
+            id: idx + 1,
+            slug: p.slug,
+            nameEn: p.nameEn,
+            nameAr: p.nameAr,
+            subtitleEn: p.subtitleEn || "",
+            subtitleAr: p.subtitleAr || "",
+            size: p.size || "",
+            badgeEn: p.badgeEn || "",
+            badgeAr: p.badgeAr || "",
+            price: Number(p.price) || 0,
+            image: p.mainImage || "/products/crunchy.jfif",
+          }));
+        if (active) setFeatured(mapped);
+      } catch (e) {
+        // Leave empty on failure; no hardcoded fallback
+      } finally {
+        if (active) setLoadingProducts(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const currentTestimonial = useMemo(
     () => testimonials[activeTestimonial],
@@ -501,7 +536,7 @@ export default function MoodWorldClassStore() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {featuredProducts.map((product) => (
+            {(loadingProducts ? [] : featured).map((product) => (
               <article
                 key={product.id}
                 className="group overflow-hidden rounded-[2.4rem] border border-[#f0dfc7] bg-white/90 shadow-[0_24px_75px_rgba(82,44,12,0.09)] transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_32px_96px_rgba(82,44,12,0.16)]"
@@ -701,8 +736,8 @@ export default function MoodWorldClassStore() {
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-white/85">
                   {isArabic
-                    ? "هذا العرض التجاري مصمم ليُظهر المنتج بمظهر احترافي، واضح، وجذاب للأسواق العالية القيمة."
-                    : "A premium wholesale presentation designed to attract high-value partners and bulk buyers."}
+                    ? "اسعار خاصة للكميات وعروض الجملة"
+                    : " Special Prices For Big Quantities and Wholesales"}
                 </p>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -725,8 +760,8 @@ export default function MoodWorldClassStore() {
             <div className="mt-2 text-sm font-black uppercase tracking-[0.2em] text-[#5f3b1f]">Premium Peanut Butter</div>
             <p className="mt-4 leading-7 text-[#6f4d34]">
               {isArabic
-                ? "واجهتك الآن تبدو أكثر احترافية، عصرية، ومرغوبة من المتاجر التقليدية."
-                : "Your storefront now feels modern, premium, and built for high-value shoppers."}
+                ? "تجربة مميزة تجعلك تثق في كل منتج من موود."
+                : "Unique experience that makes you trust every Mood product."}
             </p>
             {/* Social Media Icons */}
             <div className="mt-6 flex items-center gap-3">

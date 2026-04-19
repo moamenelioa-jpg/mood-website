@@ -10,9 +10,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:hostinger": "next start -p $PORT",
+    "migrate:deploy": "prisma migrate deploy",
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "@prisma/adapter-mariadb": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@vercel/analytics": "^2.0.1",

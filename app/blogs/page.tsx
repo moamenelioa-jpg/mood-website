@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,6 +16,8 @@ import {
   Trash2,
   User,
   LogOut,
+  Star,
+  Clock,
 } from "lucide-react";
 import { useLanguage, LanguageSwitcher } from "@/app/lib/language-context";
 import { useCart } from "@/app/lib/cart-context";
@@ -180,24 +182,56 @@ export default function BlogsPage() {
   const { cartCount } = useCart();
   const { openContactForm } = useContactForm();
   const { user, openLogin } = useAuth();
-  const { getComments, addComment, deleteComment } = useComments();
+  const { subscribeComments, addComment, deleteComment } = useComments();
   const [activeBlog, setActiveBlog] = useState(blogPosts[0].slug);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [justPosted, setJustPosted] = useState(false);
+  const [blogComments, setBlogComments] = useState<import("./lib/comments-context").Comment[]>([]);
 
   const currentBlog =
     blogPosts.find((b) => b.slug === activeBlog) ?? blogPosts[0];
 
-  const blogComments = useMemo(
-    () => getComments(activeBlog),
-    [getComments, activeBlog]
-  );
+  // Subscribe to live approved comments whenever activeBlog changes
+  useEffect(() => {
+    setBlogComments([]);
+    setJustPosted(false);
+    const unsub = subscribeComments(activeBlog, setBlogComments);
+    return unsub;
+  }, [activeBlog, subscribeComments]);
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !commentText.trim()) return;
-    addComment(activeBlog, user.id, user.name, commentText);
-    setCommentText("");
+    if (!user || !commentText.trim() || submitting) return;
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      await addComment(
+        activeBlog,
+        "blog",
+        user.id,
+        user.name,
+        commentText,
+        rating > 0 ? rating : undefined
+      );
+      setCommentText("");
+      setRating(0);
+      setJustPosted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to post.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await deleteComment(commentId);
+    } catch {}
   };
 
   return (
@@ -494,26 +528,76 @@ export default function BlogsPage() {
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#15803d] text-sm font-black text-white">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 space-y-3">
+                      {/* Star rating (optional) */}
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star === rating ? 0 : star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            aria-label={`${star} star`}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`h-6 w-6 ${
+                                star <= (hoverRating || rating)
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "fill-none text-[#d6b896]"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        {rating > 0 && (
+                          <span className="ms-1 text-xs text-[#9b5a1a] font-semibold">
+                            {rating}/5
+                          </span>
+                        )}
+                      </div>
+
                       <textarea
                         value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
+                        onChange={(e) => { setCommentText(e.target.value); setSubmitError(""); }}
                         placeholder={
                           isArabic
                             ? "اكتب تعليقك هنا..."
                             : "Write your comment here..."
                         }
                         rows={3}
+                        maxLength={2000}
                         className="w-full resize-none rounded-xl border border-[#e7c9a8] bg-white p-4 text-sm text-[#2d170d] placeholder:text-[#b8977a] focus:border-[#15803d] focus:outline-none focus:ring-2 focus:ring-[#15803d]/20"
                       />
-                      <div className="mt-2 flex justify-end">
+
+                      {submitError && (
+                        <p className="text-xs text-red-500 font-medium">{submitError}</p>
+                      )}
+
+                      {justPosted && (
+                        <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-2.5 text-sm text-amber-700">
+                          <Clock className="h-4 w-4 shrink-0" />
+                          <span className="font-semibold">
+                            {isArabic
+                              ? "تعليقك قيد المراجعة وسيظهر بعد الموافقة."
+                              : "Your comment is pending review and will appear once approved."}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[#b8977a]">
+                          {commentText.length}/2000
+                        </span>
                         <button
                           type="submit"
-                          disabled={!commentText.trim()}
+                          disabled={!commentText.trim() || submitting}
                           className="inline-flex items-center gap-2 rounded-xl bg-[#15803d] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-[#15803d]/25 transition hover:bg-[#166534] disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Send className="h-4 w-4" />
-                          {isArabic ? "نشر التعليق" : "Post Comment"}
+                          {submitting
+                            ? (isArabic ? "جاري النشر..." : "Posting...")
+                            : (isArabic ? "نشر التعليق" : "Post Comment")}
                         </button>
                       </div>
                     </div>
@@ -567,9 +651,7 @@ export default function BlogsPage() {
                         {user && user.id === comment.userId && (
                           <button
                             type="button"
-                            onClick={() =>
-                              deleteComment(comment.id, comment.userId)
-                            }
+                            onClick={() => handleDeleteComment(comment.id)}
                             className="opacity-0 group-hover:opacity-100 rounded-full p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 transition"
                             aria-label={isArabic ? "حذف" : "Delete"}
                           >
@@ -577,6 +659,20 @@ export default function BlogsPage() {
                           </button>
                         )}
                       </div>
+                      {comment.rating !== undefined && (
+                        <div className="flex items-center gap-0.5 ps-11 mb-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-3.5 w-3.5 ${
+                                star <= comment.rating!
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "fill-none text-[#d6b896]"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
                       <p className="text-sm leading-relaxed text-[#5f4330] ps-11">
                         {comment.text}
                       </p>

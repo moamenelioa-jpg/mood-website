@@ -3,7 +3,7 @@ import {
   getFirestoreOrderByNumber,
   updateFirestoreOrder,
 } from "@/app/lib/firestore-orders-admin";
-import { adminStorage, adminStorageBucket } from "@/app/lib/firebase-admin";
+import { getSupabaseServer, getSupabaseBucket } from "@/app/lib/supabase";
 
 export const runtime = "nodejs";
 
@@ -14,12 +14,12 @@ function getStorageErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   const loweredMessage = message.toLowerCase();
 
-  if (loweredMessage.includes("specified bucket does not exist")) {
-    return "Firebase Storage bucket is missing. Create the default bucket in Firebase Console > Storage and verify the bucket name in NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET or FIREBASE_ADMIN_STORAGE_BUCKET.";
+  if (loweredMessage.includes("bucket") && loweredMessage.includes("not")) {
+    return "Supabase Storage bucket is missing. Create the bucket in Supabase → Storage and set SUPABASE_BUCKET.";
   }
 
-  if (loweredMessage.includes("permission") || loweredMessage.includes("forbidden")) {
-    return "Firebase Storage rejected the upload. Verify the project billing plan, bucket existence, and the service account permissions.";
+  if (loweredMessage.includes("permission") || loweredMessage.includes("forbidden") || loweredMessage.includes("unauthorized")) {
+    return "Supabase Storage rejected the upload. Check bucket policies and the service role key.";
   }
 
   return "Failed to upload receipt";
@@ -84,52 +84,53 @@ export async function POST(req: Request) {
       );
     }
 
-    // --- Upload to Firebase Storage ---
+    // --- Upload to Supabase Storage ---
     const timestamp = Date.now();
-    // Sanitize filename: keep only alphanumeric, dots, hyphens, underscores
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-    const storagePath = `payment_proofs/${orderNumber}/${timestamp}-${safeFileName}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const objectPath = `receipts/${orderNumber}/receipt-${timestamp}.${ext}`;
 
-    if (!adminStorageBucket) {
+    const supabase = getSupabaseServer();
+    const bucket = getSupabaseBucket();
+
+    const arrayBuffer = await file.arrayBuffer();
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(objectPath, arrayBuffer, { contentType: file.type, upsert: true });
+
+    if (uploadError) {
+      console.error("[Supabase Receipt Upload] Error:", uploadError);
       return NextResponse.json(
-        {
-          success: false,
-          error: "Firebase Storage bucket is not configured. Set NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET or FIREBASE_ADMIN_STORAGE_BUCKET.",
-        },
+        { success: false, error: getStorageErrorMessage(uploadError) },
         { status: 500 }
       );
     }
 
-    const bucket = adminStorage.bucket(adminStorageBucket);
-    const storageFile = bucket.file(storagePath);
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    await storageFile.save(buffer, {
-      metadata: {
-        contentType: file.type,
-        metadata: {
-          orderNumber,
-          uploadedAt: new Date().toISOString(),
-        },
-      },
-    });
-
-    // Make the file publicly readable via a signed URL (valid 10 years)
-    const [signedUrl] = await storageFile.getSignedUrl({
-      action: "read",
-      expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000,
-    });
+    // Prefer public URL when bucket is public; otherwise sign for long view
+    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(objectPath);
+    let receiptUrl = pub?.publicUrl || null;
+    if (!receiptUrl) {
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(objectPath, 60 * 60 * 24 * 365); // 1 year
+      if (signErr || !signed) {
+        console.error("[Supabase Signed URL] Error:", signErr);
+        return NextResponse.json(
+          { success: false, error: "Failed to generate receipt URL" },
+          { status: 500 }
+        );
+      }
+      receiptUrl = signed.signedUrl;
+    }
 
     // --- Update Firestore order ---
     await updateFirestoreOrder(order.id, {
-      receiptImageUrl: signedUrl,
-      receiptImagePath: storagePath,
+      receiptImageUrl: receiptUrl,
+      receiptImagePath: objectPath,
       receiptUploadedAt: new Date().toISOString(),
       paymentStatus: "pending_verification",
     });
 
-    return NextResponse.json({ success: true, receiptImageUrl: signedUrl });
+    return NextResponse.json({ success: true, receiptImageUrl: receiptUrl });
   } catch (error) {
     console.error("[API] Receipt upload error:", error);
     return NextResponse.json(

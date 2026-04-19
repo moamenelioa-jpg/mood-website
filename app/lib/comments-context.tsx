@@ -3,81 +3,88 @@
 import {
   createContext,
   useContext,
-  useState,
-  useEffect,
   useCallback,
   ReactNode,
 } from "react";
+import {
+  subscribeApprovedComments,
+  createComment,
+  removeComment,
+} from "./firestore-comments";
 
 export interface Comment {
   id: string;
-  blogSlug: string;
+  targetId: string;
+  targetType: "blog" | "product";
   userId: string;
   userName: string;
   text: string;
+  rating?: number;
+  status: "pending" | "approved";
   createdAt: string;
 }
 
 interface CommentsContextType {
-  getComments: (blogSlug: string) => Comment[];
-  addComment: (blogSlug: string, userId: string, userName: string, text: string) => void;
-  deleteComment: (commentId: string, userId: string) => void;
+  /**
+   * Subscribe to live approved comments for a target.
+   * Call the returned unsubscribe function on cleanup.
+   */
+  subscribeComments: (
+    targetId: string,
+    onChange: (comments: Comment[]) => void
+  ) => () => void;
+  /**
+   * Add a new comment (status starts as "pending", awaiting moderation).
+   * Returns the new document ID, or throws on validation failure.
+   */
+  addComment: (
+    targetId: string,
+    targetType: "blog" | "product",
+    userId: string,
+    userName: string,
+    text: string,
+    rating?: number
+  ) => Promise<string>;
+  /** Delete own comment by ID. */
+  deleteComment: (commentId: string) => Promise<void>;
 }
 
 const CommentsContext = createContext<CommentsContextType | undefined>(undefined);
 
-const COMMENTS_KEY = "mood_blog_comments";
-
 export function CommentsProvider({ children }: { children: ReactNode }) {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(COMMENTS_KEY);
-    if (saved) {
-      try {
-        setComments(JSON.parse(saved));
-      } catch {
-        localStorage.removeItem(COMMENTS_KEY);
-      }
-    }
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-    }
-  }, [comments, mounted]);
-
-  const getComments = useCallback(
-    (blogSlug: string) => comments.filter((c) => c.blogSlug === blogSlug),
-    [comments]
+  const subscribeComments = useCallback(
+    (targetId: string, onChange: (comments: Comment[]) => void) =>
+      subscribeApprovedComments(targetId, onChange),
+    []
   );
 
   const addComment = useCallback(
-    (blogSlug: string, userId: string, userName: string, text: string) => {
-      const newComment: Comment = {
-        id: crypto.randomUUID(),
-        blogSlug,
-        userId,
-        userName,
-        text: text.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      setComments((prev) => [...prev, newComment]);
+    async (
+      targetId: string,
+      targetType: "blog" | "product",
+      userId: string,
+      userName: string,
+      text: string,
+      rating?: number
+    ): Promise<string> => {
+      const trimmed = text.trim();
+      if (!trimmed) throw new Error("Comment text cannot be empty.");
+      if (trimmed.length > 2000) throw new Error("Comment is too long (max 2000 characters).");
+      if (!userId) throw new Error("Must be signed in to comment.");
+      if (rating !== undefined && (rating < 1 || rating > 5))
+        throw new Error("Rating must be between 1 and 5.");
+      return createComment({ targetId, targetType, userId, userName, text: trimmed, rating });
     },
     []
   );
 
-  const deleteComment = useCallback((commentId: string, userId: string) => {
-    setComments((prev) =>
-      prev.filter((c) => !(c.id === commentId && c.userId === userId))
-    );
-  }, []);
+  const deleteComment = useCallback(
+    async (commentId: string) => removeComment(commentId),
+    []
+  );
 
   return (
-    <CommentsContext.Provider value={{ getComments, addComment, deleteComment }}>
+    <CommentsContext.Provider value={{ subscribeComments, addComment, deleteComment }}>
       {children}
     </CommentsContext.Provider>
   );
@@ -90,3 +97,4 @@ export function useComments() {
   }
   return context;
 }
+
