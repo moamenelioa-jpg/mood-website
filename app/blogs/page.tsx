@@ -191,7 +191,7 @@ export default function BlogsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [justPosted, setJustPosted] = useState(false);
-  const [blogComments, setBlogComments] = useState<import("./lib/comments-context").Comment[]>([]);
+  const [blogComments, setBlogComments] = useState<import("@/app/lib/comments-context").Comment[]>([]);
 
   const currentBlog =
     blogPosts.find((b) => b.slug === activeBlog) ?? blogPosts[0];
