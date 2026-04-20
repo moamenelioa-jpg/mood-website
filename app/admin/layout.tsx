@@ -32,6 +32,8 @@ const NAV_SECTIONS = [
     items: [
       { href: "/admin/products", icon: Package, label: "جميع المنتجات" },
       { href: "/admin/products/new", icon: PlusCircle, label: "إضافة منتج" },
+      { href: "/admin/categories", icon: Package, label: "الفئات" },
+      { href: "/admin/inventory", icon: Package, label: "المخزون" },
     ],
   },
   {
@@ -39,6 +41,12 @@ const NAV_SECTIONS = [
     items: [
       { href: "/admin/orders", icon: ShoppingBag, label: "الطلبات" },
       { href: "/admin/receipts", icon: Receipt, label: "إيصالات التحويل" },
+    ],
+  },
+  {
+    title: "العملاء",
+    items: [
+      { href: "/admin/customers", icon: Users, label: "العملاء" },
     ],
   },
   {
@@ -52,6 +60,8 @@ const NAV_SECTIONS = [
     title: "الإعدادات",
     items: [
       { href: "/admin/users", icon: Users, label: "المشرفون" },
+      { href: "/admin/settings", icon: LayoutDashboard, label: "إعدادات الدفع" },
+      { href: "/admin/uploads", icon: PlusCircle, label: "مركز الرفع" },
     ],
   },
 ];

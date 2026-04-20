@@ -61,7 +61,9 @@ export async function verifyAdminToken(idToken: string): Promise<VerifiedAdmin> 
   const email = decoded.email ?? "";
 
   // 2. Check custom claim (fastest – no Firestore read needed most of the time)
-  if (decoded.admin === true) {
+  const roles = (decoded as any).roles as string[] | undefined;
+  const hasAdminRole = Array.isArray(roles) ? roles.includes("admin") : false;
+  if (decoded.admin === true || hasAdminRole) {
     return { uid, email, displayName: decoded.name };
   }
 

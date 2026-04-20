@@ -28,10 +28,11 @@ interface ReceiptOrder {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending_verification: "قيد المراجعة",
-  paid: "مدفوع",
-  failed: "مرفوض",
+  under_review: "قيد المراجعة",
+  approved: "مدفوع",
+  rejected: "مرفوض",
   unpaid: "غير مدفوع",
+  cash_on_delivery: "الدفع عند الاستلام",
 };
 
 export default function AdminReceiptsPage() {
@@ -48,17 +49,31 @@ export default function AdminReceiptsPage() {
       const token = await getToken();
       if (!token) throw new Error("No auth token");
 
-      const res = await fetch("/api/admin/orders?paymentMethod=bank_transfer&limit=50", {
+      // Fetch recent orders and filter client-side to manual methods with receipts
+      const res = await fetch(`/api/admin/orders?limit=200`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error ?? "Failed to load orders");
 
-      // Only keep orders that have a receipt uploaded
-      const bankOrders: ReceiptOrder[] = (data.orders ?? []).filter(
-        (o: ReceiptOrder) => o.receiptImageUrl
-      );
-      setOrders(bankOrders);
+      // Keep only manual payment orders that have a receipt
+      const manual = new Set(["bank_transfer", "wallet", "instapay"]);
+      const result: ReceiptOrder[] = (data.orders ?? [])
+        .filter((o: any) => manual.has(o.paymentMethod) && !!o.receiptImageUrl)
+        .map((o: any) => ({
+          id: o.id,
+          orderNumber: o.orderNumber,
+          customerName: o.customerName,
+          phone: o.phone,
+          total: o.total,
+          paymentStatus: o.paymentStatus,
+          orderStatus: o.orderStatus,
+          receiptImageUrl: o.receiptImageUrl ?? null,
+          receiptImagePath: o.receiptImagePath ?? null,
+          receiptUploadedAt: o.receiptUploadedAt ?? null,
+          createdAt: o.createdAt,
+        }));
+      setOrders(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "خطأ في تحميل البيانات");
     } finally {
@@ -111,8 +126,8 @@ export default function AdminReceiptsPage() {
   };
 
   // Separate pending from resolved
-  const pending = orders.filter((o) => o.paymentStatus === "pending_verification");
-  const resolved = orders.filter((o) => o.paymentStatus !== "pending_verification");
+  const pending = orders.filter((o) => o.paymentStatus === "under_review");
+  const resolved = orders.filter((o) => o.paymentStatus !== "under_review");
 
   return (
     <div className="p-6 max-w-6xl mx-auto" dir="rtl">
@@ -211,6 +226,7 @@ function ReceiptCard({
   readonly?: boolean;
 }) {
   const [imgError, setImgError] = useState(false);
+  const isPdf = (order.receiptImagePath || order.receiptImageUrl || "").toLowerCase().endsWith(".pdf");
 
   const statusColors: Record<string, string> = {
     pending_verification: "bg-orange-100 text-orange-800",
@@ -248,7 +264,7 @@ function ReceiptCard({
 
       {/* Receipt image */}
       <div className="relative bg-[#f9f5f0] h-56 flex items-center justify-center">
-        {order.receiptImageUrl && !imgError ? (
+        {order.receiptImageUrl && !imgError && !isPdf ? (
           <>
             <Image
               src={order.receiptImageUrl}
@@ -268,6 +284,16 @@ function ReceiptCard({
               <ExternalLink className="h-4 w-4 text-[#5f3b1f]" />
             </a>
           </>
+        ) : isPdf && order.receiptImageUrl ? (
+          <a
+            href={order.receiptImageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-xl border border-[#edd1b6] bg-white px-4 py-2 text-sm font-semibold text-[#5f3b1f] hover:bg-[#f9f5f0] transition"
+            title="فتح ملف PDF"
+          >
+            عرض الإيصال (PDF)
+          </a>
         ) : (
           <div className="flex flex-col items-center gap-2 text-[#a08672]">
             <ImageOff className="h-10 w-10" />

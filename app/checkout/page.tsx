@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,23 +9,59 @@ import {
   CreditCard,
   Banknote,
   Building2,
+  Smartphone,
+  Zap,
   Loader2,
   ShoppingBag,
   AlertCircle,
   MapPin,
   Mail,
+  Upload,
+  Check,
+  Copy,
 } from "lucide-react";
 import { PaymentMethod, CreateOrderResponse, EGYPTIAN_GOVERNORATES } from "@/app/lib/types";
 import { useLanguage } from "@/app/lib/language-context";
 import { useCart } from "@/app/lib/cart-context";
 import { translations } from "@/app/lib/translations";
 
+interface PublicSettings {
+  bankName?: string;
+  accountName?: string;
+  iban?: string;
+  bankActive?: boolean;
+  walletNumber?: string;
+  walletAccountName?: string;
+  walletActive?: boolean;
+  instapayIdentifier?: string;
+  instapayAccountName?: string;
+  instapayActive?: boolean;
+  codActive?: boolean;
+}
+
 export default function CheckoutPage() {
   const { t, isArabic, formatPrice, language } = useLanguage();
   const { cart, cartTotal, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
+  // Payment settings loaded from server
+  const [paySettings, setPaySettings] = useState<PublicSettings>({
+    codActive: true,
+    bankActive: true,
+    walletActive: true,
+    walletNumber: "01204819854",
+    instapayActive: true,
+    instapayIdentifier: "01204819854",
+  });
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((r) => r.json())
+      .then((d) => { if (d.success && d.settings) setPaySettings(d.settings); })
+      .catch(() => {/* silently use defaults */});
+  }, []);
+
   // Form state
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -35,6 +71,42 @@ export default function CheckoutPage() {
   const [governorate, setGovernorate] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
+  const [manualMethod, setManualMethod] = useState<"bank_transfer" | "wallet" | "instapay">("bank_transfer");
+
+  // Receipt upload state (required for manual payment methods)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState<"order" | "receipt">("order");
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+
+  const isManualPayment = ["bank_transfer", "wallet", "instapay"].includes(paymentMethod);
+
+  // Clear receipt when switching away from a manual payment method
+  useEffect(() => {
+    if (!isManualPayment) {
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview);
+      setReceiptFile(null);
+      setReceiptPreview(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentMethod]);
+
+  const handleReceiptSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!(file.type.startsWith("image/") || file.type === "application/pdf")) {
+      setError(t("success.proofInvalidType"));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t("success.proofTooLarge"));
+      return;
+    }
+    if (receiptPreview) URL.revokeObjectURL(receiptPreview);
+    setReceiptFile(file);
+    setReceiptPreview(URL.createObjectURL(file));
+    setError(null);
+  };
 
   // Flat shipping fee for all orders across Egypt
   const shippingFee = 60;
@@ -48,6 +120,26 @@ export default function CheckoutPage() {
     }
     return gov;
   };
+
+  const hasBank = !!paySettings.bankActive;
+  const hasWallet = !!paySettings.walletActive;
+  const hasInstapay = !!paySettings.instapayActive;
+  const hasAnyManual = hasBank || hasWallet || hasInstapay;
+
+  // Ensure manual sub-selection is always a valid active method
+  useEffect(() => {
+    const firstActive = hasBank ? "bank_transfer" : hasWallet ? "wallet" : hasInstapay ? "instapay" : ("bank_transfer" as const);
+    setManualMethod((prev) => {
+      if (prev === "bank_transfer" && !hasBank) return firstActive;
+      if (prev === "wallet" && !hasWallet) return firstActive;
+      if (prev === "instapay" && !hasInstapay) return firstActive;
+      return prev;
+    });
+    // If current paymentMethod is a disabled manual option, move to firstActive
+    if (["bank_transfer", "wallet", "instapay"].includes(paymentMethod) && !({ bank_transfer: hasBank, wallet: hasWallet, instapay: hasInstapay } as any)[paymentMethod]) {
+      setPaymentMethod(firstActive as PaymentMethod);
+    }
+  }, [hasBank, hasWallet, hasInstapay]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +156,14 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Receipt is required for all manual payment methods
+    if (isManualPayment && !receiptFile) {
+      setError(t("checkout.receiptRequired"));
+      return;
+    }
+
     setLoading(true);
+    setLoadingStep("order");
 
     try {
       const res = await fetch("/api/orders", {
@@ -94,6 +193,19 @@ export default function CheckoutPage() {
       // Clear cart on successful order
       clearCart();
 
+      // Upload receipt for manual payment methods before redirecting
+      if (isManualPayment && receiptFile && data.order?.orderNumber) {
+        setLoadingStep("receipt");
+        try {
+          const formData = new FormData();
+          formData.append("orderNumber", data.order.orderNumber);
+          formData.append("receipt", receiptFile);
+          await fetch("/api/orders/proof", { method: "POST", body: formData });
+        } catch {
+          // Non-fatal: order created, user can re-upload on success page
+        }
+      }
+
       // Redirect to payment or success page
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
@@ -108,6 +220,28 @@ export default function CheckoutPage() {
 
   // Arrow icon based on direction
   const BackArrow = isArabic ? ArrowRight : ArrowLeft;
+
+  // Reusable copy-to-clipboard button
+  function CopyButton({ value, className }: { value: string; className?: string }) {
+    const [copied, setCopied] = useState(false);
+    return (
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          } catch {}
+        }}
+        className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition ${className || ""}`}
+        aria-label={copied ? t("checkout.copied") : t("checkout.copy")}
+      >
+        <Copy className="h-3.5 w-3.5" />
+        {copied ? t("checkout.copied") : t("checkout.copy")}
+      </button>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -333,6 +467,7 @@ export default function CheckoutPage() {
 
                 <div className="space-y-3">
                   {/* Cash on Delivery */}
+                  {paySettings.codActive && (
                   <label
                     className={`flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 cursor-pointer transition ${
                       paymentMethod === "cod"
@@ -369,6 +504,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   </label>
+                  )}
 
                   {/* Paymob Card Payment */}
                   <label
@@ -408,10 +544,11 @@ export default function CheckoutPage() {
                     </div>
                   </label>
 
-                  {/* Bank Transfer */}
+                  {/* Manual Payment (group) */}
+                  {hasAnyManual && (
                   <label
                     className={`flex items-center gap-3 sm:gap-4 rounded-xl border-2 p-3 sm:p-4 cursor-pointer transition ${
-                      paymentMethod === "bank_transfer"
+                      ["bank_transfer","wallet","instapay"].includes(paymentMethod)
                         ? "border-[#15803d] bg-[#15803d]/5"
                         : "border-[#edd1b6] hover:border-[#d2a57b]"
                     }`}
@@ -419,51 +556,253 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       name="payment"
-                      value="bank_transfer"
-                      checked={paymentMethod === "bank_transfer"}
-                      onChange={() => setPaymentMethod("bank_transfer")}
+                      value="manual"
+                      checked={["bank_transfer","wallet","instapay"].includes(paymentMethod)}
+                      onChange={() => setPaymentMethod(manualMethod as PaymentMethod)}
                       className="sr-only"
                     />
                     <div
                       className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                        paymentMethod === "bank_transfer"
+                        ["bank_transfer","wallet","instapay"].includes(paymentMethod)
                           ? "border-[#15803d] bg-[#15803d]"
                           : "border-[#a08672]"
                       }`}
                     >
-                      {paymentMethod === "bank_transfer" && (
+                      {["bank_transfer","wallet","instapay"].includes(paymentMethod) && (
                         <div className="h-2 w-2 rounded-full bg-white" />
                       )}
                     </div>
                     <Building2 className="h-6 w-6 text-[#ca8a04]" />
                     <div className="flex-1">
                       <div className="font-bold text-[#2b170d]">
-                        {t("checkout.bankTransfer")}
+                        {t("checkout.manualPayment")}
                       </div>
                       <div className="text-sm text-[#6f4d34]">
-                        {t("checkout.bankTransferDesc")}
+                        {t("checkout.manualPaymentDesc")}
                       </div>
                     </div>
                   </label>
+                  )}
 
-                  {/* Bank Details Panel */}
-                  {paymentMethod === "bank_transfer" && (
+                  {/* Manual Payment Details Panel */}
+                  {["bank_transfer","wallet","instapay"].includes(paymentMethod) && hasAnyManual && (
+                    <div className="rounded-xl border-2 border-[#edd1b6] bg-white p-3 sm:p-4 mt-1">
+                      {/* Segmented control */}
+                      <div className="flex items-center gap-2 mb-3">
+                        {hasBank && (
+                          <button type="button"
+                            onClick={() => { setManualMethod("bank_transfer"); setPaymentMethod("bank_transfer"); }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${manualMethod === "bank_transfer" ? "bg-[#fefce8] border-[#ca8a04] text-[#854d0e]" : "border-[#edd1b6] text-[#6f4d34] hover:bg-[#f9f5f0]"}`}
+                          >{t("checkout.bankTransfer")}</button>
+                        )}
+                        {hasWallet && (
+                          <button type="button"
+                            onClick={() => { setManualMethod("wallet"); setPaymentMethod("wallet"); }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${manualMethod === "wallet" ? "bg-[#eff6ff] border-[#2563eb] text-[#1e40af]" : "border-[#edd1b6] text-[#6f4d34] hover:bg-[#f9f5f0]"}`}
+                          >{t("checkout.wallet")}</button>
+                        )}
+                        {hasInstapay && (
+                          <button type="button"
+                            onClick={() => { setManualMethod("instapay"); setPaymentMethod("instapay"); }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${manualMethod === "instapay" ? "bg-[#fdf4ff] border-[#9333ea] text-[#7e22ce]" : "border-[#edd1b6] text-[#6f4d34] hover:bg-[#f9f5f0]"}`}
+                          >{t("checkout.instapay")}</button>
+                        )}
+                      </div>
+
+                      {/* Bank Details Panel */}
+                      {manualMethod === "bank_transfer" && paySettings.bankActive && (
                     <div className="rounded-xl border-2 border-[#ca8a04]/20 bg-[#fefce8] p-3 sm:p-4 mt-1">
                       <h3 className="font-bold text-[#854d0e] mb-3 text-sm">
                         {t("checkout.bankDetails")}
                       </h3>
-                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5 overflow-x-auto">
-                        <p><strong className="text-[#854d0e]">{t("checkout.bankName")}:</strong> QNB - Qatar National Bank</p>
-                        <p><strong className="text-[#854d0e]">{t("checkout.accountHolder")}:</strong> MOAMEN ABDALLAH ELIWA</p>
-                        <p><strong className="text-[#854d0e]">{t("checkout.iban")}:</strong> EG120037002708181020791449735</p>
+                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-2 overflow-x-auto">
+                        {paySettings.bankName && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#854d0e]">{t("checkout.bankName")}:</strong> {paySettings.bankName}</p>
+                          </div>
+                        )}
+                        {paySettings.accountName && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#854d0e]">{t("checkout.accountHolder")}:</strong> {paySettings.accountName}</p>
+                            <CopyButton value={paySettings.accountName} className="border-[#facc15] text-[#854d0e] hover:bg-[#fef9c3]" />
+                          </div>
+                        )}
+                        {paySettings.iban && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#854d0e]">{t("checkout.iban")}:</strong> {paySettings.iban}</p>
+                            <CopyButton value={paySettings.iban} className="border-[#facc15] text-[#854d0e] hover:bg-[#fef9c3]" />
+                          </div>
+                        )}
                       </div>
                       <p className="text-xs text-[#a16207] mt-2">
                         {t("checkout.bankTransferNote")}
                       </p>
+                      <p className="text-[11px] text-[#a16207] mt-1">
+                        {t("checkout.receiptReminder")}
+                      </p>
+                      {/* Receipt upload zone */}
+                      <div className="mt-4 pt-4 border-t border-[#ca8a04]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-[#854d0e]">
+                            {t("checkout.attachReceipt")} <span className="text-red-500">*</span>
+                          </span>
+                          {receiptFile && (
+                            <button type="button" onClick={() => receiptInputRef.current?.click()}
+                              className="text-xs text-[#854d0e] underline underline-offset-2">
+                              {t("checkout.changeReceipt")}
+                            </button>
+                          )}
+                        </div>
+                        {receiptFile && receiptPreview ? (
+                          <div className="rounded-xl overflow-hidden border border-[#ca8a04]/30">
+                            <img src={receiptPreview} alt="receipt preview" className="w-full max-h-44 object-cover" />
+                            <div className="flex items-center gap-1.5 bg-[#15803d]/90 text-white text-xs py-1.5 px-3">
+                              <Check className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="truncate">{receiptFile.name}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => receiptInputRef.current?.click()}
+                            className="w-full rounded-xl border-2 border-dashed border-[#ca8a04]/40 bg-white hover:border-[#ca8a04] hover:bg-[#fef9c3] transition p-4 flex flex-col items-center gap-1.5">
+                            <Upload className="h-5 w-5 text-[#854d0e]" />
+                            <span className="text-sm font-semibold text-[#854d0e]">{t("checkout.attachReceipt")}</span>
+                            <span className="text-xs text-[#a16207]">{t("checkout.receiptHint")}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                      )}
+
+                      {/* Wallet Details Panel */}
+                      {manualMethod === "wallet" && paySettings.walletActive && (
+                    <div className="rounded-xl border-2 border-[#2563eb]/20 bg-[#eff6ff] p-3 sm:p-4 mt-1">
+                      <h3 className="font-bold text-[#1e40af] mb-3 text-sm">
+                        {t("checkout.walletDetails")}
+                      </h3>
+                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-2">
+                        {paySettings.walletNumber && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#1e40af]">{t("checkout.walletNumber")}:</strong> {paySettings.walletNumber}</p>
+                            <CopyButton value={paySettings.walletNumber} className="border-[#93c5fd] text-[#1e40af] hover:bg-[#dbeafe]" />
+                          </div>
+                        )}
+                        {paySettings.walletAccountName && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#1e40af]">{t("checkout.accountHolder")}:</strong> {paySettings.walletAccountName}</p>
+                            <CopyButton value={paySettings.walletAccountName} className="border-[#93c5fd] text-[#1e40af] hover:bg-[#dbeafe]" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#1d4ed8] mt-2">
+                        {t("checkout.walletNote")}
+                      </p>
+                      <p className="text-[11px] text-[#1d4ed8] mt-1">
+                        {t("checkout.receiptReminder")}
+                      </p>
+                      {/* Receipt upload zone */}
+                      <div className="mt-4 pt-4 border-t border-[#2563eb]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-[#1e40af]">
+                            {t("checkout.attachReceipt")} <span className="text-red-500">*</span>
+                          </span>
+                          {receiptFile && (
+                            <button type="button" onClick={() => receiptInputRef.current?.click()}
+                              className="text-xs text-[#1e40af] underline underline-offset-2">
+                              {t("checkout.changeReceipt")}
+                            </button>
+                          )}
+                        </div>
+                        {receiptFile && receiptPreview ? (
+                          <div className="rounded-xl overflow-hidden border border-[#2563eb]/30">
+                            <img src={receiptPreview} alt="receipt preview" className="w-full max-h-44 object-cover" />
+                            <div className="flex items-center gap-1.5 bg-[#15803d]/90 text-white text-xs py-1.5 px-3">
+                              <Check className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="truncate">{receiptFile.name}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => receiptInputRef.current?.click()}
+                            className="w-full rounded-xl border-2 border-dashed border-[#2563eb]/40 bg-white hover:border-[#2563eb] hover:bg-[#dbeafe] transition p-4 flex flex-col items-center gap-1.5">
+                            <Upload className="h-5 w-5 text-[#1e40af]" />
+                            <span className="text-sm font-semibold text-[#1e40af]">{t("checkout.attachReceipt")}</span>
+                            <span className="text-xs text-[#1d4ed8]">{t("checkout.receiptHint")}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                      )}
+
+                      {/* InstaPay Details Panel */}
+                      {manualMethod === "instapay" && paySettings.instapayActive && (
+                    <div className="rounded-xl border-2 border-[#9333ea]/20 bg-[#fdf4ff] p-3 sm:p-4 mt-1">
+                      <h3 className="font-bold text-[#7e22ce] mb-3 text-sm">
+                        {t("checkout.instapayDetails")}
+                      </h3>
+                      <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-2">
+                        {paySettings.instapayIdentifier && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#7e22ce]">{t("checkout.instapayId")}:</strong> {paySettings.instapayIdentifier}</p>
+                            <CopyButton value={paySettings.instapayIdentifier} className="border-[#d8b4fe] text-[#7e22ce] hover:bg-[#f3e8ff]" />
+                          </div>
+                        )}
+                        {paySettings.instapayAccountName && (
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate"><strong className="text-[#7e22ce]">{t("checkout.accountHolder")}:</strong> {paySettings.instapayAccountName}</p>
+                            <CopyButton value={paySettings.instapayAccountName} className="border-[#d8b4fe] text-[#7e22ce] hover:bg-[#f3e8ff]" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#7e22ce] mt-2">
+                        {t("checkout.instapayNote")}
+                      </p>
+                      <p className="text-[11px] text-[#7e22ce] mt-1">
+                        {t("checkout.receiptReminder")}
+                      </p>
+                      {/* Receipt upload zone */}
+                      <div className="mt-4 pt-4 border-t border-[#9333ea]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-[#7e22ce]">
+                            {t("checkout.attachReceipt")} <span className="text-red-500">*</span>
+                          </span>
+                          {receiptFile && (
+                            <button type="button" onClick={() => receiptInputRef.current?.click()}
+                              className="text-xs text-[#7e22ce] underline underline-offset-2">
+                              {t("checkout.changeReceipt")}
+                            </button>
+                          )}
+                        </div>
+                        {receiptFile && receiptPreview ? (
+                          <div className="rounded-xl overflow-hidden border border-[#9333ea]/30">
+                            <img src={receiptPreview} alt="receipt preview" className="w-full max-h-44 object-cover" />
+                            <div className="flex items-center gap-1.5 bg-[#15803d]/90 text-white text-xs py-1.5 px-3">
+                              <Check className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="truncate">{receiptFile.name}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => receiptInputRef.current?.click()}
+                            className="w-full rounded-xl border-2 border-dashed border-[#9333ea]/40 bg-white hover:border-[#9333ea] hover:bg-[#f3e8ff] transition p-4 flex flex-col items-center gap-1.5">
+                            <Upload className="h-5 w-5 text-[#7e22ce]" />
+                            <span className="text-sm font-semibold text-[#7e22ce]">{t("checkout.attachReceipt")}</span>
+                            <span className="text-xs text-[#7e22ce]/70">{t("checkout.receiptHint")}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Hidden shared file input for receipt upload */}
+              <input
+                ref={receiptInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleReceiptSelect}
+                className="hidden"
+              />
 
               {/* Error Message */}
               {error && (
@@ -482,10 +821,14 @@ export default function CheckoutPage() {
                 {loading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    {t("checkout.processing")}
+                    {loadingStep === "receipt"
+                      ? t("checkout.uploadingReceipt")
+                      : t("checkout.creatingOrder")}
                   </>
                 ) : paymentMethod === "paymob" ? (
                   t("checkout.proceedToPayment")
+                ) : isManualPayment ? (
+                  t("checkout.placeOrderWithReceipt")
                 ) : (
                   t("checkout.placeOrder")
                 )}

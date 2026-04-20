@@ -13,6 +13,7 @@ import {
   EGYPTIAN_GOVERNORATES,
 } from "@/app/lib/types";
 import { createPaymobIntention, type PaymobBillingData } from "@/app/lib/paymob";
+import { adminDb } from "@/app/lib/firebase-admin";
 
 export const runtime = "nodejs";
 
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!["cod", "paymob", "bank_transfer"].includes(paymentMethod)) {
+    if (!["cod", "paymob", "bank_transfer", "wallet", "instapay"].includes(paymentMethod)) {
       return NextResponse.json<CreateOrderResponse>(
         { success: false, error: "Invalid payment method" },
         { status: 400 }
@@ -163,7 +164,11 @@ export async function POST(req: Request) {
     // ==========================================
 
     if (paymentMethod === "cod") {
-      // Cash on Delivery - order is ready
+      // Cash on Delivery - confirm order immediately, set payment status
+      await updateFirestoreOrder(order.id, {
+        paymentStatus: "cash_on_delivery",
+        orderStatus: "confirmed",
+      });
       return NextResponse.json<CreateOrderResponse>({
         success: true,
         order: order as unknown as Order,
@@ -220,14 +225,77 @@ export async function POST(req: Request) {
     }
 
     if (paymentMethod === "bank_transfer") {
-      // Bank transfer - order saved with pending payment, awaiting proof
+      // Snapshot payment details from settings for display on success page
+      let bankName: string | undefined, accountName: string | undefined, iban: string | undefined;
+      try {
+        const settingsDoc = await adminDb.collection("settings").doc("global").get();
+        if (settingsDoc.exists) {
+          const s = settingsDoc.data() as Record<string, string>;
+          bankName = s.bankName;
+          accountName = s.accountName;
+          iban = s.iban;
+        }
+      } catch { /* ignore */ }
+
       await updateFirestoreOrder(order.id, {
-        paymentStatus: "pending_verification",
+        paymentStatus: "unpaid",
+        orderStatus: "pending",
+        ...(bankName && { bankName }),
+        ...(accountName && { accountName }),
+        ...(iban && { iban }),
       });
       return NextResponse.json<CreateOrderResponse>({
         success: true,
         order: order as unknown as Order,
         redirectUrl: `/success?order=${order.orderNumber}&payment=bank`,
+      });
+    }
+
+    if (paymentMethod === "wallet") {
+      let walletNumber: string | undefined, walletAccountName: string | undefined;
+      try {
+        const settingsDoc = await adminDb.collection("settings").doc("global").get();
+        if (settingsDoc.exists) {
+          const s = settingsDoc.data() as Record<string, string>;
+          walletNumber = s.walletNumber;
+          walletAccountName = s.walletAccountName;
+        }
+      } catch { /* ignore */ }
+
+      await updateFirestoreOrder(order.id, {
+        paymentStatus: "unpaid",
+        orderStatus: "pending",
+        ...(walletNumber && { walletNumber }),
+        ...(walletAccountName && { walletAccountName }),
+      });
+      return NextResponse.json<CreateOrderResponse>({
+        success: true,
+        order: order as unknown as Order,
+        redirectUrl: `/success?order=${order.orderNumber}&payment=wallet`,
+      });
+    }
+
+    if (paymentMethod === "instapay") {
+      let instapayIdentifier: string | undefined, instapayAccountName: string | undefined;
+      try {
+        const settingsDoc = await adminDb.collection("settings").doc("global").get();
+        if (settingsDoc.exists) {
+          const s = settingsDoc.data() as Record<string, string>;
+          instapayIdentifier = s.instapayIdentifier;
+          instapayAccountName = s.instapayAccountName;
+        }
+      } catch { /* ignore */ }
+
+      await updateFirestoreOrder(order.id, {
+        paymentStatus: "unpaid",
+        orderStatus: "pending",
+        ...(instapayIdentifier && { instapayIdentifier }),
+        ...(instapayAccountName && { instapayAccountName }),
+      });
+      return NextResponse.json<CreateOrderResponse>({
+        success: true,
+        order: order as unknown as Order,
+        redirectUrl: `/success?order=${order.orderNumber}&payment=instapay`,
       });
     }
 

@@ -54,7 +54,9 @@ export default function NewProductPage() {
         badgeAr: data.badgeAr.trim(),
         tags: data.tags.split(",").map((t) => t.trim()).filter(Boolean),
         mainImage: data.mainImage,
+        mainImagePath: data.mainImagePath,
         galleryImages: data.galleryImages,
+        galleryImagePaths: data.galleryImagePaths,
         sortOrder: parseInt(data.sortOrder) || 0,
       };
 

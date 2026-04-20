@@ -29,9 +29,9 @@ export async function GET(req: Request) {
       );
     }
 
-    if (order.paymentMethod !== "bank_transfer") {
+    if (!["bank_transfer", "wallet", "instapay"].includes(order.paymentMethod)) {
       return NextResponse.json(
-        { success: false, error: "This order is not a bank transfer order" },
+        { success: false, error: "This order is not a manual payment order" },
         { status: 400 }
       );
     }
@@ -67,7 +67,7 @@ export async function PATCH(req: Request) {
     const { searchParams } = new URL(req.url);
     const orderNumber = searchParams.get("order");
     const body = await req.json();
-    const { action } = body;
+    const { action, note } = body as { action: "approve" | "reject"; note?: string };
 
     if (!orderNumber) {
       return NextResponse.json(
@@ -91,14 +91,27 @@ export async function PATCH(req: Request) {
       );
     }
 
+    const nowIso = new Date().toISOString();
+    const reviewer = (admin as any).email || "";
+
     if (action === "approve") {
       await updateFirestoreOrder(order.id, {
-        paymentStatus: "paid",
+        paymentStatus: "approved",
         orderStatus: "confirmed",
+        receiptReviewStatus: "approved",
+        receiptReviewedAt: nowIso,
+        ...(reviewer ? { receiptReviewedBy: reviewer } : {}),
+        ...(note ? { receiptReviewNote: note } : {}),
       });
     } else {
       await updateFirestoreOrder(order.id, {
-        paymentStatus: "failed",
+        paymentStatus: "rejected",
+        // Keep order open for re-upload unless you want to cancel automatically
+        orderStatus: "pending",
+        receiptReviewStatus: "rejected",
+        receiptReviewedAt: nowIso,
+        ...(reviewer ? { receiptReviewedBy: reviewer } : {}),
+        ...(note ? { receiptReviewNote: note } : {}),
       });
     }
 

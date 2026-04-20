@@ -103,3 +103,152 @@ model NotificationLog {
   
   @@index([orderId])
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SHIPPING MODULE
+// ──────────────────────────────────────────────────────────────────────────────
+
+// 1. Shipping Carriers — one row per carrier (bosta, aramex, smsa, …)
+model ShippingCarrier {
+  id          String   @id @default(cuid())
+  carrierId   String   @unique  // "bosta" | "aramex" | "smsa" — used as lookup key in code
+  name        String            // Display name: "Bosta", "Aramex Egypt"
+  type        String            // "express" | "standard" | "same_day"
+  active      Boolean  @default(true)
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  credentials CarrierCredential[]
+  shipments   ShipmentRecord[]
+  statusMaps  CarrierStatusMapping[]
+}
+
+// 2. Carrier Credentials — stored per environment (test / live)
+//    Sensitive values (apiKey, secret) are AES-256 encrypted before insert.
+//    The app decrypts them at runtime using SHIPPING_ENCRYPTION_KEY from env.
+//    NEVER store raw API keys in plaintext.
+model CarrierCredential {
+  id            String   @id @default(cuid())
+  carrierId     String                         // FK → ShippingCarrier.carrierId
+  env           String   @default("live")      // "test" | "live"
+
+  // Encrypted fields — values are AES-256-GCM encrypted blobs
+  apiKeyEnc     String?  @db.Text             // encrypted API key
+  secretKeyEnc  String?  @db.Text             // encrypted secret / password
+  accountId     String?                        // account/merchant ID (non-secret, plain)
+  username      String?                        // username if basic-auth carrier
+  baseUrl       String?                        // override default base URL
+
+  // Webhook verification
+  webhookSecretEnc String? @db.Text           // encrypted webhook HMAC secret
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  carrier       ShippingCarrier @relation(fields: [carrierId], references: [carrierId], onDelete: Cascade)
+
+  @@unique([carrierId, env])  // one credential set per carrier per env
+  @@index([carrierId])
+}
+
+// 3. Shipment Records — created when admin clicks Dispatch
+model ShipmentRecord {
+  id              String   @id @default(cuid())
+  orderId         String   @unique         // one shipment per order (enforce at app layer too)
+  carrierId       String                   // FK → ShippingCarrier.carrierId
+
+  // Carrier-issued identifiers
+  carrierShipmentId String?               // carrier's internal ID (e.g. Bosta delivery ID)
+  trackingNumber    String?  @unique      // public tracking number
+  trackingUrl       String?  @db.Text     // tracking page URL
+
+  // Label
+  labelUrl          String?  @db.Text     // hosted label URL if carrier provides one
+  labelBase64       String?  @db.LongText // raw base64 PDF/PNG label for printing
+
+  // Status
+  carrierStatus     String?               // raw status string from carrier API
+  shippingStatus    String   @default("pending")
+  // "pending" | "picked_up" | "in_transit" | "out_for_delivery" | "delivered" | "returned" | "cancelled"
+
+  // Dispatch context snapshot (what was sent to carrier)
+  shipToSnapshot    Json                  // { name, phone, address, city, governorate }
+  shipmentSnapshot  Json                  // { weightGrams, dims, codAmount, notes }
+
+  // Raw API payloads (for debugging and dispute resolution)
+  rawRequest        Json?                 // payload sent to carrier API
+  rawResponse       Json?                 // full response received from carrier
+
+  // Dispatch result
+  dispatchedAt      DateTime?
+  dispatchedBy      String?              // admin uid who clicked Dispatch
+  deliveredAt       DateTime?
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  carrier           ShippingCarrier @relation(fields: [carrierId], references: [carrierId])
+  logs              ShippingLog[]
+
+  @@index([orderId])
+  @@index([carrierId])
+  @@index([trackingNumber])
+  @@index([shippingStatus])
+}
+
+// 4. Carrier Status Mapping — translates carrier event codes to internal statuses
+//    Populated once per carrier during setup (seed or admin UI).
+//    Example rows:
+//      carrierId="bosta", carrierEvent="PACKAGE_RECEIVED"  → internalStatus="picked_up"
+//      carrierId="bosta", carrierEvent="OUT_FOR_DELIVERY"  → internalStatus="out_for_delivery"
+//      carrierId="bosta", carrierEvent="DELIVERED"         → internalStatus="delivered"
+//      carrierId="aramex", carrierEvent="SH014"            → internalStatus="delivered"
+model CarrierStatusMapping {
+  id             String  @id @default(cuid())
+  carrierId      String                        // FK → ShippingCarrier.carrierId
+  carrierEvent   String                        // raw event code from carrier webhook
+  internalStatus String                        // maps to ShippingStatus enum in types.ts
+  label          String?                       // human-readable label: "Out for Delivery"
+
+  carrier        ShippingCarrier @relation(fields: [carrierId], references: [carrierId], onDelete: Cascade)
+
+  @@unique([carrierId, carrierEvent])           // one mapping per event per carrier
+  @@index([carrierId])
+}
+
+// 5. Shipping Logs — one row per API call attempt (including retries and webhook events)
+model ShippingLog {
+  id           String   @id @default(cuid())
+  shipmentId   String?                         // FK → ShipmentRecord (null if pre-shipment error)
+  orderId      String
+  carrierId    String
+  action       String                          // "dispatch" | "cancel" | "webhook" | "status_poll"
+
+  // Result
+  success      Boolean
+  errorCode    String?
+  errorMessage String?  @db.Text
+  retryCount   Int      @default(0)
+
+  // Payload snapshot
+  requestPayload  Json?
+  responsePayload Json?
+
+  // Timestamp
+  createdAt    DateTime @default(now())
+
+  // Relations
+  shipment     ShipmentRecord? @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([carrierId])
+  @@index([shipmentId])
+  @@index([createdAt])
+}

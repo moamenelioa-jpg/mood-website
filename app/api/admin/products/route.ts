@@ -14,17 +14,21 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const includeArchived = searchParams.get("archived") === "true";
 
-    let query = adminDb.collection(PRODUCTS_COLLECTION).orderBy("sortOrder", "asc");
-
-    if (!includeArchived) {
-      query = query.where("archived", "==", false);
+    // Fetch all without orderBy to avoid composite index requirement,
+    // then sort in memory.
+    let snapshot;
+    if (includeArchived) {
+      snapshot = await adminDb.collection(PRODUCTS_COLLECTION).get();
+    } else {
+      snapshot = await adminDb
+        .collection(PRODUCTS_COLLECTION)
+        .where("archived", "==", false)
+        .get();
     }
 
-    const snapshot = await query.get();
-    const products = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const products = snapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
     return NextResponse.json({ success: true, products });
   } catch (err) {
@@ -86,12 +90,15 @@ export async function POST(req: NextRequest) {
       stockQuantity: Number(body.stockQuantity) ?? 0,
       availability: body.availability || "in_stock",
       featured: Boolean(body.featured),
+      status: body.status || "active",
       archived: false,
       badgeEn: body.badgeEn || "",
       badgeAr: body.badgeAr || "",
       tags: Array.isArray(body.tags) ? body.tags : [],
       mainImage: body.mainImage || "",
+      mainImagePath: body.mainImagePath || "",
       galleryImages: Array.isArray(body.galleryImages) ? body.galleryImages : [],
+      galleryImagePaths: Array.isArray(body.galleryImagePaths) ? body.galleryImagePaths : [],
       sortOrder: Number(body.sortOrder) || 0,
       createdAt: now,
       updatedAt: now,

@@ -11,6 +11,8 @@ import {
   CreditCard,
   Banknote,
   Building2,
+  Smartphone,
+  Zap,
   Copy,
   Check,
   MapPin,
@@ -27,7 +29,11 @@ function SuccessContent() {
   const { t, formatPrice, isArabic } = useLanguage();
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
-  const isBankPayment = searchParams.get("payment") === "bank";
+  const paymentParam = searchParams.get("payment");
+  const isBankPayment = paymentParam === "bank";
+  const isWalletPayment = paymentParam === "wallet";
+  const isInstapayPayment = paymentParam === "instapay";
+  const isManualPayment = isBankPayment || isWalletPayment || isInstapayPayment;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +72,13 @@ function SuccessContent() {
 
   const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !order) return;
+    if (!file) return;
+
+    const orderNo = order?.orderNumber || orderNumber;
+    if (!orderNo) {
+      setProofError(isArabic ? "رقم الطلب غير موجود" : "Order number is missing");
+      return;
+    }
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
@@ -85,7 +97,7 @@ function SuccessContent() {
 
     try {
       const formData = new FormData();
-      formData.append("orderNumber", order.orderNumber);
+      formData.append("orderNumber", orderNo);
       formData.append("receipt", file);
 
       const res = await fetch("/api/orders/proof", {
@@ -97,7 +109,8 @@ function SuccessContent() {
       if (data.success) {
         setProofUploaded(true);
       } else {
-        setProofError(data.error || t("success.proofUploadFailed"));
+        const msg = data.error || t("success.proofUploadFailed");
+        setProofError(data.detail ? `${msg} — ${data.detail}` : msg);
       }
     } catch {
       setProofError(t("success.proofUploadFailed"));
@@ -112,6 +125,10 @@ function SuccessContent() {
         return <CreditCard className="h-5 w-5 text-[#5469d4]" />;
       case "bank_transfer":
         return <Building2 className="h-5 w-5 text-[#ca8a04]" />;
+      case "wallet":
+        return <Smartphone className="h-5 w-5 text-[#2563eb]" />;
+      case "instapay":
+        return <Zap className="h-5 w-5 text-[#9333ea]" />;
       default:
         return <Banknote className="h-5 w-5 text-[#15803d]" />;
     }
@@ -123,19 +140,29 @@ function SuccessContent() {
         return t("checkout.cardPayment");
       case "bank_transfer":
         return t("checkout.bankTransfer");
+      case "wallet":
+        return t("checkout.wallet");
+      case "instapay":
+        return t("checkout.instapay");
       default:
         return t("checkout.cod");
     }
   };
 
   const getPaymentStatus = (order: Order) => {
-    if (order.paymentStatus === "paid") {
-      return t("success.paymentReceived");
+    switch (order.paymentStatus) {
+      case "approved":
+      case "paid": // legacy alias
+        return t("success.paymentReceived");
+      case "cash_on_delivery":
+        return t("success.payWhenDelivered");
+      case "rejected":
+        return t("success.paymentRejected") ?? t("success.awaitingPayment");
+      case "under_review":
+      case "receipt_uploaded":
+      default:
+        return t("success.awaitingPayment");
     }
-    if (order.paymentMethod === "cod") {
-      return t("success.payWhenDelivered");
-    }
-    return t("success.awaitingPayment");
   };
 
   if (loading) {
@@ -220,16 +247,15 @@ function SuccessContent() {
                 <div className="text-sm text-[#a16207] space-y-2">
                   <p>{t("success.transferTo")}</p>
                   <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5">
-                    <p><strong>{t("success.bank")}:</strong> QNB - Qatar National Bank</p>
-                    <p><strong>{t("success.accountName")}:</strong> MOAMEN ABDALLAH ELIWA</p>
-                    <p><strong>{t("success.iban")}:</strong> EG120037002708181020791449735</p>
+                    {order.bankName && <p><strong>{t("success.bank")}:</strong> {order.bankName}</p>}
+                    {order.accountName && <p><strong>{t("success.accountName")}:</strong> {order.accountName}</p>}
+                    {order.iban && <p><strong>{t("success.iban")}:</strong> {order.iban}</p>}
                     <p><strong>{t("success.amount")}:</strong> {formatPrice(order.total)}</p>
                   </div>
                   <p className="text-xs">
                     {t("success.includeOrderNumber")}
                   </p>
                 </div>
-
                 {/* Payment Proof Upload */}
                 <div className="mt-4 pt-3 border-t border-[#ca8a04]/20">
                   <h4 className="font-bold text-[#854d0e] mb-2 text-sm">{t("success.uploadProof")}</h4>
@@ -240,28 +266,87 @@ function SuccessContent() {
                     </div>
                   ) : (
                     <>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProofUpload}
-                        className="hidden"
-                      />
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={proofUploading}
-                        className="flex items-center gap-2 rounded-lg bg-white border border-[#ca8a04]/30 px-4 py-2.5 text-sm font-semibold text-[#854d0e] hover:bg-[#fef9c3] transition disabled:opacity-50"
-                      >
-                        {proofUploading ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />{t("success.uploading")}</>
-                        ) : (
-                          <><Upload className="h-4 w-4" />{t("success.uploadReceipt")}</>
-                        )}
+                      <input ref={fileInputRef} type="file" accept="image/*,application/pdf" onChange={handleProofUpload} className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} disabled={proofUploading}
+                        className="flex items-center gap-2 rounded-lg bg-white border border-[#ca8a04]/30 px-4 py-2.5 text-sm font-semibold text-[#854d0e] hover:bg-[#fef9c3] transition disabled:opacity-50">
+                        {proofUploading ? (<><Loader2 className="h-4 w-4 animate-spin" />{t("success.uploading")}</>) : (<><Upload className="h-4 w-4" />{t("success.uploadReceipt")}</>)}
                       </button>
-                      {proofError && (
-                        <p className="text-xs text-red-600 mt-1">{proofError}</p>
-                      )}
+                      {proofError && <p className="text-xs text-red-600 mt-1">{proofError}</p>}
                       <p className="text-xs text-[#a16207] mt-1">{t("success.proofNote")}</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Wallet Payment Instructions */}
+            {isWalletPayment && order.paymentMethod === "wallet" && (
+              <div className="mb-4 p-4 rounded-xl border-2 border-[#2563eb]/20 bg-[#eff6ff]">
+                <h3 className="font-bold text-[#1e40af] mb-2">
+                  {t("checkout.walletDetails")}
+                </h3>
+                <div className="text-sm text-[#1d4ed8] space-y-2">
+                  <p>{t("success.transferTo")}</p>
+                  <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5">
+                    {order.walletNumber && <p><strong>{t("checkout.walletNumber")}:</strong> {order.walletNumber}</p>}
+                    {order.walletAccountName && <p><strong>{t("success.accountName")}:</strong> {order.walletAccountName}</p>}
+                    <p><strong>{t("success.amount")}:</strong> {formatPrice(order.total)}</p>
+                  </div>
+                  <p className="text-xs">{t("success.includeOrderNumber")}</p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#2563eb]/20">
+                  <h4 className="font-bold text-[#1e40af] mb-2 text-sm">{t("success.uploadProof")}</h4>
+                  {proofUploaded ? (
+                    <div className="flex items-center gap-2 text-[#15803d] bg-[#15803d]/10 rounded-lg p-3">
+                      <Check className="h-5 w-5" />
+                      <span className="text-sm font-semibold">{t("success.proofReceived")}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <input ref={fileInputRef} type="file" accept="image/*,application/pdf" onChange={handleProofUpload} className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} disabled={proofUploading}
+                        className="flex items-center gap-2 rounded-lg bg-white border border-[#2563eb]/30 px-4 py-2.5 text-sm font-semibold text-[#1e40af] hover:bg-[#dbeafe] transition disabled:opacity-50">
+                        {proofUploading ? (<><Loader2 className="h-4 w-4 animate-spin" />{t("success.uploading")}</>) : (<><Upload className="h-4 w-4" />{t("success.uploadReceipt")}</>)}
+                      </button>
+                      {proofError && <p className="text-xs text-red-600 mt-1">{proofError}</p>}
+                      <p className="text-xs text-[#1d4ed8] mt-1">{t("success.proofNote")}</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* InstaPay Payment Instructions */}
+            {isInstapayPayment && order.paymentMethod === "instapay" && (
+              <div className="mb-4 p-4 rounded-xl border-2 border-[#9333ea]/20 bg-[#fdf4ff]">
+                <h3 className="font-bold text-[#7e22ce] mb-2">
+                  {t("checkout.instapayDetails")}
+                </h3>
+                <div className="text-sm text-[#7e22ce] space-y-2">
+                  <p>{t("success.transferTo")}</p>
+                  <div className="bg-white rounded-lg p-3 font-mono text-xs ltr-nums space-y-1.5">
+                    {order.instapayIdentifier && <p><strong>{t("checkout.instapayId")}:</strong> {order.instapayIdentifier}</p>}
+                    {order.instapayAccountName && <p><strong>{t("success.accountName")}:</strong> {order.instapayAccountName}</p>}
+                    <p><strong>{t("success.amount")}:</strong> {formatPrice(order.total)}</p>
+                  </div>
+                  <p className="text-xs">{t("success.includeOrderNumber")}</p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#9333ea]/20">
+                  <h4 className="font-bold text-[#7e22ce] mb-2 text-sm">{t("success.uploadProof")}</h4>
+                  {proofUploaded ? (
+                    <div className="flex items-center gap-2 text-[#15803d] bg-[#15803d]/10 rounded-lg p-3">
+                      <Check className="h-5 w-5" />
+                      <span className="text-sm font-semibold">{t("success.proofReceived")}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <input ref={fileInputRef} type="file" accept="image/*,application/pdf" onChange={handleProofUpload} className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} disabled={proofUploading}
+                        className="flex items-center gap-2 rounded-lg bg-white border border-[#9333ea]/30 px-4 py-2.5 text-sm font-semibold text-[#7e22ce] hover:bg-[#f3e8ff] transition disabled:opacity-50">
+                        {proofUploading ? (<><Loader2 className="h-4 w-4 animate-spin" />{t("success.uploading")}</>) : (<><Upload className="h-4 w-4" />{t("success.uploadReceipt")}</>)}
+                      </button>
+                      {proofError && <p className="text-xs text-red-600 mt-1">{proofError}</p>}
+                      <p className="text-xs text-[#7e22ce] mt-1">{t("success.proofNote")}</p>
                     </>
                   )}
                 </div>

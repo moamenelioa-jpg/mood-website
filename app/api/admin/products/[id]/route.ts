@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/app/lib/admin-auth";
-import { adminDb, adminStorage, adminStorageBucket } from "@/app/lib/firebase-admin";
+import { adminDb } from "@/app/lib/firebase-admin";
+import { getSupabaseServer, getSupabaseBucket } from "@/app/lib/supabase";
 import { FieldValue } from "firebase-admin/firestore";
 
 const PRODUCTS_COLLECTION = "products";
@@ -83,8 +84,8 @@ export async function PATCH(
       "nameEn", "nameAr", "slug", "subtitleEn", "subtitleAr",
       "descriptionEn", "descriptionAr", "category", "size",
       "price", "discountPrice", "sku", "stockQuantity",
-      "availability", "featured", "archived", "badgeEn", "badgeAr",
-      "tags", "mainImage", "galleryImages", "sortOrder",
+      "availability", "featured", "archived", "status", "badgeEn", "badgeAr",
+      "tags", "mainImage", "mainImagePath", "galleryImages", "galleryImagePaths", "sortOrder",
     ];
 
     for (const field of allowedFields) {
@@ -132,13 +133,24 @@ export async function DELETE(
       );
     }
 
-    // Delete associated images from Storage
+    // Delete associated images from Supabase Storage
     try {
-      const bucket = adminStorage.bucket(adminStorageBucket);
-      const [files] = await bucket.getFiles({ prefix: `products/${id}/` });
-      await Promise.all(files.map((f) => f.delete()));
+      const data = doc.data();
+      const supabase = getSupabaseServer();
+      const bucket = getSupabaseBucket();
+      const pathsToDelete: string[] = [];
+
+      if (data?.mainImagePath) pathsToDelete.push(data.mainImagePath as string);
+      if (Array.isArray(data?.galleryImagePaths)) {
+        pathsToDelete.push(
+          ...(data.galleryImagePaths as string[]).filter(Boolean)
+        );
+      }
+      if (pathsToDelete.length) {
+        await supabase.storage.from(bucket).remove(pathsToDelete);
+      }
     } catch {
-      // Non-critical: storage cleanup may fail
+      // Non-critical: storage cleanup failure should not block the Firestore delete
     }
 
     await docRef.delete();

@@ -49,7 +49,9 @@ export default function EditProductPage() {
         badgeAr: p.badgeAr ?? "",
         tags: Array.isArray(p.tags) ? p.tags.join(", ") : "",
         mainImage: p.mainImage ?? "",
+        mainImagePath: p.mainImagePath ?? "",
         galleryImages: Array.isArray(p.galleryImages) ? p.galleryImages : [],
+        galleryImagePaths: Array.isArray(p.galleryImagePaths) ? p.galleryImagePaths : [],
         sortOrder: String(p.sortOrder ?? 0),
       });
     } catch (err) {
@@ -86,7 +88,9 @@ export default function EditProductPage() {
         badgeAr: data.badgeAr.trim(),
         tags: data.tags.split(",").map((t) => t.trim()).filter(Boolean),
         mainImage: data.mainImage,
+        mainImagePath: data.mainImagePath,
         galleryImages: data.galleryImages,
+        galleryImagePaths: data.galleryImagePaths,
         sortOrder: parseInt(data.sortOrder) || 0,
       };
 

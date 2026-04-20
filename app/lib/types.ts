@@ -16,12 +16,19 @@ export const PaymentMethods = {
   COD: "cod",
   PAYMOB: "paymob",
   BANK_TRANSFER: "bank_transfer",
+  WALLET: "wallet",
+  INSTAPAY: "instapay",
 } as const;
 export type PaymentMethod = (typeof PaymentMethods)[keyof typeof PaymentMethods];
 
 export const PaymentStatuses = {
   UNPAID: "unpaid",
-  PENDING: "pending",
+  RECEIPT_UPLOADED: "receipt_uploaded", // optional intermediate state
+  UNDER_REVIEW: "under_review",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  CASH_ON_DELIVERY: "cash_on_delivery",
+  // Back-compat (used by card/paymob or legacy):
   PAID: "paid",
   FAILED: "failed",
 } as const;
@@ -85,7 +92,28 @@ export interface Order {
   // Payment
   paymentMethod: string;
   paymentStatus: string;
-  
+
+  // Receipt (bank transfer / wallet / instapay)
+  receiptImageUrl?: string | null;
+  receiptImagePath?: string | null;
+  receiptUploadedAt?: string | null;
+  receiptReviewStatus?: "approved" | "rejected" | null;
+  receiptReviewNote?: string | null;
+  receiptReviewedBy?: string | null;
+  receiptReviewedAt?: string | null;
+
+  // Flags
+  hasProof?: boolean;
+
+  // Snapshot of payment account details (stored at order creation for display on success page)
+  bankName?: string | null;
+  accountName?: string | null;
+  iban?: string | null;
+  walletNumber?: string | null;
+  walletAccountName?: string | null;
+  instapayIdentifier?: string | null;
+  instapayAccountName?: string | null;
+
   // Order Status
   orderStatus: string;
   

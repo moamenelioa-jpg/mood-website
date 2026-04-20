@@ -82,6 +82,26 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+  const handleSeedProducts = useCallback(async () => {
+    setActionLoading("seed");
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("No auth token");
+      const res = await fetch("/api/admin/seed?target=products", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? "فشل بذر البيانات");
+      await fetchProducts();
+      showToast("تم بذر منتجات تجريبية");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "حدث خطأ", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [getToken, fetchProducts]);
+
   const handleArchive = async (id: string, currentArchived: boolean) => {
     setActionLoading(id);
     try {
@@ -188,6 +208,20 @@ export default function AdminProductsPage() {
         <div className="flex items-center gap-2">
           <button onClick={fetchProducts} disabled={loading} className="p-2 rounded-xl border border-[#edd1b6] bg-white hover:bg-[#f9f5f0] transition">
             <RefreshCw className={`h-4 w-4 text-[#5f3b1f] ${loading ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={handleSeedProducts}
+            disabled={loading || actionLoading === "seed"}
+            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-[#edd1b6] bg-white px-3 py-2.5 text-sm font-bold text-[#5f3b1f] hover:bg-[#f9f5f0] transition disabled:opacity-60"
+          >
+            {actionLoading === "seed" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Package className="h-4 w-4" />
+                بذر منتجات تجريبية
+              </>
+            )}
           </button>
           <Link href="/admin/products/new" className="flex items-center gap-2 rounded-xl bg-[#15803d] text-white px-4 py-2.5 text-sm font-bold hover:bg-[#166534] transition shadow-sm">
             <PlusCircle className="h-4 w-4" />

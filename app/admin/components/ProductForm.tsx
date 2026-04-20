@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAdminAuth } from "@/app/lib/admin-auth-context";
-import { ImageUploader, GalleryUploader } from "./ImageUploader";
+import { ImageUploader, GalleryUploader, ImageEntry } from "./ImageUploader";
 
 export interface ProductFormData {
   nameEn: string;
@@ -25,7 +25,9 @@ export interface ProductFormData {
   badgeAr: string;
   tags: string;          // comma-separated
   mainImage: string;
+  mainImagePath: string;        // Supabase storage path
   galleryImages: string[];
+  galleryImagePaths: string[];  // parallel to galleryImages
   sortOrder: string;
 }
 
@@ -59,7 +61,8 @@ const EMPTY: ProductFormData = {
   featured: false,
   badgeEn: "", badgeAr: "",
   tags: "",
-  mainImage: "", galleryImages: [],
+  mainImage: "", mainImagePath: "",
+  galleryImages: [], galleryImagePaths: [],
   sortOrder: "0",
 };
 
@@ -74,6 +77,7 @@ export function ProductForm({
   const { getToken, session } = useAdminAuth();
   const [token, setToken] = useState<string>("");
   const [form, setForm] = useState<ProductFormData>({ ...EMPTY, ...initial });
+  const [categories, setCategories] = useState<Array<{ id: string; nameAr: string; nameEn: string; slug: string }>>([]);
 
   // Load token once on mount for image uploads
   const ensureToken = useCallback(async () => {
@@ -84,6 +88,20 @@ export function ProductForm({
   }, [token, getToken]);
 
   useEffect(() => { ensureToken(); }, [ensureToken]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const t = await ensureToken();
+        if (!t) return;
+        const res = await fetch("/api/admin/categories", { headers: { Authorization: `Bearer ${t}` } });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      } catch {}
+    })();
+  }, [ensureToken]);
 
   const set = (field: keyof ProductFormData, value: string | boolean | string[]) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -211,7 +229,13 @@ export function ProductForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className={labelCls}>الفئة <span className="text-red-500">*</span></label>
-            <input className={inputCls} value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Peanut Butter" required />
+            <input list="categories-list" className={inputCls} value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Peanut Butter" required />
+            <datalist id="categories-list">
+              {categories.map((c) => (
+                <option key={c.id} value={c.nameAr} />
+              ))}
+            </datalist>
+            <p className="text-xs text-[#a08672] mt-1">يمكنك الكتابة الحرّة أو اختيار فئة موجودة</p>
           </div>
           <div>
             <label className={labelCls}>التاغات (مفصولة بفاصلة)</label>
@@ -248,18 +272,31 @@ export function ProductForm({
         <div className="flex flex-wrap gap-8">
           <ImageUploader
             label="الصورة الرئيسية (مطلوبة)"
-            currentUrl={form.mainImage}
-            storagePath={`products/${storageId}/main`}
+            current={{ url: form.mainImage, path: form.mainImagePath }}
+            storagePath={`products/${storageId}`}
+            storagePrefix="main"
             token={token}
-            onUploaded={(url) => set("mainImage", url)}
-            onDeleted={() => set("mainImage", "")}
+            onUploaded={(entry: ImageEntry) => {
+              set("mainImage", entry.url);
+              set("mainImagePath", entry.path);
+            }}
+            onDeleted={() => {
+              set("mainImage", "");
+              set("mainImagePath", "");
+            }}
           />
           <div className="flex-1 min-w-64">
             <GalleryUploader
-              images={form.galleryImages}
+              images={form.galleryImages.map((url, i) => ({
+                url,
+                path: form.galleryImagePaths[i] ?? "",
+              }))}
               productId={storageId}
               token={token}
-              onChange={(urls) => set("galleryImages", urls)}
+              onChange={(entries: ImageEntry[]) => {
+                set("galleryImages", entries.map((e) => e.url));
+                set("galleryImagePaths", entries.map((e) => e.path));
+              }}
             />
           </div>
         </div>
