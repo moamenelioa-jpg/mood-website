@@ -23,6 +23,7 @@ export type PaymentMethod = (typeof PaymentMethods)[keyof typeof PaymentMethods]
 
 export const PaymentStatuses = {
   UNPAID: "unpaid",
+  PENDING: "pending",
   RECEIPT_UPLOADED: "receipt_uploaded", // optional intermediate state
   UNDER_REVIEW: "under_review",
   APPROVED: "approved",

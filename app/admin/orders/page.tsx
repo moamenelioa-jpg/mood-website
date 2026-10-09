@@ -57,8 +57,8 @@ interface Order {
   subtotal: number;
   shippingFee: number;
   total: number;
-  paymentMethod: "cod" | "paymob" | "bank_transfer";
-  paymentStatus: "unpaid" | "pending" | "paid" | "failed" | "pending_verification";
+  paymentMethod: "cod" | "paymob" | "bank_transfer" | "wallet" | "instapay";
+  paymentStatus: "unpaid" | "pending" | "paid" | "failed" | "pending_verification" | "under_review" | "receipt_uploaded" | "approved" | "rejected" | "cash_on_delivery";
   orderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   receiptImageUrl?: string;
   receiptImagePath?: string;
@@ -77,6 +77,8 @@ const PM_LABELS: Record<string, string> = {
   cod: "الدفع عند الاستلام",
   paymob: "بطاقة ائتمان",
   bank_transfer: "تحويل بنكي",
+  wallet: "محفظة إلكترونية",
+  instapay: "إنستاباي",
 };
 
 const PS_LABELS: Record<string, string> = {

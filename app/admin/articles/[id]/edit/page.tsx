@@ -213,10 +213,11 @@ export default function EditArticlePage() {
           <h2 className="font-bold text-[#2b170d] text-sm border-b border-[#edd1b6] pb-3">الصورة الغلاف</h2>
           <ImageUploader
             label="صورة الغلاف"
-            currentUrl={form.coverImage}
+            current={{ url: form.coverImage, path: "" }}
             storagePath={`articles/${id}/cover`}
+            storagePrefix="cover"
             token={token}
-            onUploaded={(url) => set("coverImage", url)}
+            onUploaded={(entry) => set("coverImage", entry.url)}
             onDeleted={() => set("coverImage", "")}
           />
         </div>

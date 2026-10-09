@@ -96,7 +96,7 @@ export async function PATCH(req: Request) {
 
     if (action === "approve") {
       await updateFirestoreOrder(order.id, {
-        paymentStatus: "approved",
+        paymentStatus: "paid",
         orderStatus: "confirmed",
         receiptReviewStatus: "approved",
         receiptReviewedAt: nowIso,
@@ -105,7 +105,7 @@ export async function PATCH(req: Request) {
       });
     } else {
       await updateFirestoreOrder(order.id, {
-        paymentStatus: "rejected",
+        paymentStatus: "failed",
         // Keep order open for re-upload unless you want to cancel automatically
         orderStatus: "pending",
         receiptReviewStatus: "rejected",

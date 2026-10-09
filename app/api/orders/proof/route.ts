@@ -174,7 +174,7 @@ export async function POST(req: Request) {
       receiptImagePath: objectPath,
       receiptUploadedAt: new Date().toISOString(),
       paymentStatus: "under_review",
-      orderStatus: "awaiting_payment_review",
+      orderStatus: "pending",
       hasProof: true,
     });
 

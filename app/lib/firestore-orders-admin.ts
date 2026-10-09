@@ -26,20 +26,25 @@ export interface FirestoreOrderInput {
   total: number;
   subtotal: number;
   shippingFee: number;
-  paymentMethod: "cod" | "paymob" | "bank_transfer";
+  paymentMethod: "cod" | "paymob" | "bank_transfer" | "wallet" | "instapay";
 }
 
 export interface FirestoreOrder extends FirestoreOrderInput {
   id: string;
   orderNumber: string;
   orderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-  paymentStatus: "unpaid" | "pending" | "paid" | "failed" | "pending_verification";
+  paymentStatus: "unpaid" | "pending" | "paid" | "failed" | "pending_verification" | "under_review" | "receipt_uploaded" | "approved" | "rejected" | "cash_on_delivery";
   paymobOrderId?: string;
   paymobTransactionId?: string;
   bankTransferProof?: string; // legacy — kept for backward compat
   receiptImageUrl?: string;
   receiptImagePath?: string;
   receiptUploadedAt?: string;
+  receiptReviewStatus?: "approved" | "rejected" | null;
+  receiptReviewNote?: string | null;
+  receiptReviewedBy?: string | null;
+  receiptReviewedAt?: string | null;
+  hasProof?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
