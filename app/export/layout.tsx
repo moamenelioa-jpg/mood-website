@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Export & Wholesale | Mood Premium Peanut Butter",
     description:
       "Partner with Mood for premium peanut butter wholesale and export opportunities.",
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Mood Export" }],
+    images: [{ url: "/gf-food-industries-logo-transparent.png", width: 512, height: 512, alt: "Mood Export" }],
   },
   alternates: { canonical: "/export" },
 };

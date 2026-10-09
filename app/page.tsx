@@ -235,21 +235,17 @@ export default function MoodWorldClassStore() {
 
       <header dir="rtl" className="sticky top-0 z-50 border-b border-white/80 bg-white/80 backdrop-blur-xl shadow-sm font-cairo">
         <div className="flex w-full items-center justify-between px-3 py-3 sm:px-4 sm:py-4 lg:px-8">
-          {/* Logo + Brand — far right (first child in RTL flex) */}
-          <a href="#home" className="flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer transition-opacity hover:opacity-80">
-            <div className="relative h-10 w-10 overflow-hidden sm:h-14 sm:w-14 lg:h-16 lg:w-16">
+          {/* Brand logo — use the new round GF mark */}
+          <a href="#home" className="flex items-center shrink-0 cursor-pointer transition-opacity hover:opacity-80">
+            <div className="relative h-14 w-14 overflow-hidden sm:h-20 sm:w-20 lg:h-24 lg:w-24">
               <Image
-                src="/logo.png"
-                alt="Mood Premium Peanut Butter Logo"
+                src="/gf-food-industries-logo-transparent.png"
+                alt="GF Food Industries Logo"
                 fill
-                sizes="64px"
-                className="object-contain"
+                sizes="96px"
+                className="object-contain drop-shadow-sm"
                 priority
               />
-            </div>
-            <div className="leading-tight">
-              <div className="text-lg font-archivo-black uppercase tracking-[0.15em] text-[#16a34a] sm:text-2xl md:text-4xl lg:text-5xl">Mood</div>
-              <div className="hidden text-[11px] uppercase tracking-[0.3em] text-[#9b5a1a] sm:block">Premium Peanut Butter</div>
             </div>
           </a>
 

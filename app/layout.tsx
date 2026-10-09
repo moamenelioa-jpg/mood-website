@@ -104,7 +104,7 @@ export const metadata: Metadata = {
       "Premium peanut butter made from 100% natural peanuts. Crunchy, creamy, chocolate, diet & more. Order online in Egypt.",
     images: [
       {
-        url: "/logo.png",
+        url: "/gf-food-industries-logo-transparent.png",
         width: 512,
         height: 512,
         alt: "Mood Premium Peanut Butter Logo",
@@ -116,12 +116,12 @@ export const metadata: Metadata = {
     title: "Mood | Premium Peanut Butter",
     description:
       "Premium peanut butter made from 100% natural peanuts. Order online in Egypt.",
-    images: ["/logo.png"],
+    images: ["/gf-food-industries-logo-transparent.png"],
   },
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/gf-food-industries-logo-transparent.png",
+    shortcut: "/gf-food-industries-logo-transparent.png",
+    apple: "/gf-food-industries-logo-transparent.png",
   },
   manifest: "/manifest.json",
   alternates: {
@@ -156,7 +156,7 @@ export default function RootLayout({
               description:
                 "Premium peanut butter made from 100% natural peanuts in Egypt",
               url: siteUrl,
-              logo: `${siteUrl}/logo.png`,
+              logo: `${siteUrl}/gf-food-industries-logo-transparent.png`,
               contactPoint: {
                 "@type": "ContactPoint",
                 contactType: "customer service",

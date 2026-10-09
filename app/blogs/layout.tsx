@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "Blog – About Mood | Premium Peanut Butter",
     description:
       "Articles about Mood's premium peanut butter, health benefits, and recipes.",
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Mood Blog" }],
+    images: [{ url: "/gf-food-industries-logo-transparent.png", width: 512, height: 512, alt: "Mood Blog" }],
   },
   alternates: { canonical: "/blogs" },
 };

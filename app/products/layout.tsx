@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     title: "Shop Premium Peanut Butter | Mood",
     description:
       "Browse Mood's full range of premium peanut butter. 100% natural, high protein. Order online.",
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Mood Products" }],
+    images: [{ url: "/gf-food-industries-logo-transparent.png", width: 512, height: 512, alt: "Mood Products" }],
   },
   alternates: { canonical: "/products" },
 };

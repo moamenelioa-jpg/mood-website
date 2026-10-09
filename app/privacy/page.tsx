@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
               <div className="relative h-12 w-12 overflow-hidden">
-                <Image src="/logo.png" alt="Mood Logo" fill className="object-contain" />
+                <Image src="/gf-food-industries-logo-transparent.png" alt="Mood Logo" fill className="object-contain" />
               </div>
               <span className="text-2xl font-archivo-black uppercase tracking-[0.15em] text-[#16a34a]">
                 Mood

@@ -40,7 +40,7 @@ function LoginForm() {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm mb-4 overflow-hidden">
-            <Image src="/logo.png" alt="Mood" width={48} height={48} className="object-contain" />
+            <Image src="/gf-food-industries-logo-transparent.png" alt="Mood" width={48} height={48} className="object-contain" />
           </div>
           <h1 className="text-2xl font-black text-[#2b170d]">لوحة التحكم</h1>
           <p className="text-sm text-[#6f4d34] mt-1">Admin Dashboard · Mood Foods</p>

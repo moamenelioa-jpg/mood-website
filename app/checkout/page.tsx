@@ -275,7 +275,7 @@ export default function CheckoutPage() {
             <Link href="/" className="flex items-center gap-3">
               <div className="relative h-12 w-12 overflow-hidden">
                 <Image
-                  src="/logo.png"
+                  src="/gf-food-industries-logo-transparent.png"
                   alt="Garad Foods Logo"
                   fill
                   className="object-contain"
