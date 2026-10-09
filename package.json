@@ -8,7 +8,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "start:hostinger": "next start -p $PORT",
     "migrate:deploy": "prisma migrate deploy",
